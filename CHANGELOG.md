@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.1.0] - 2026-08-20
+
+First public release. Everything below is new.
+
 ### Added
 
 - Background handling: bokeh blur, image replacement, solid colour, virtual
@@ -47,4 +53,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   cursor.
 - Recordings taken in the same second overwrote each other.
 
-[Unreleased]: https://github.com/hashcott/AICamPro/commits/main
+[Unreleased]: https://github.com/hashcott/AICamPro/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/hashcott/AICamPro/releases/tag/v0.1.0

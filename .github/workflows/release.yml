@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to release, e.g. v0.1.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: build and publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # A release should never be cut from a tree that does not pass its own
+      # checks, so the gates run here too rather than trusting a green CI run
+      # on some earlier commit.
+      - name: Lint and test
+        run: |
+          pip install ruff==0.16.3 pytest
+          ruff check aicampro tests
+          python -m pytest -q
+
+      - name: Verify the tag matches the version in pyproject
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "Tag $TAG does not match pyproject version $VERSION" >&2
+            exit 1
+          fi
+
+      - name: Build
+        run: |
+          pip install build twine
+          python -m build
+          twine check dist/*
+
+      - name: Extract the release notes for this version
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          python - "$TAG" <<'PY' > release-notes.md
+          import re, sys
+          from pathlib import Path
+
+          version = sys.argv[1].lstrip("v")
+          text = Path("CHANGELOG.md").read_text()
+          # everything between this version's heading and the next one
+          match = re.search(
+              rf"^## \[{re.escape(version)}\].*?$\n(.*?)(?=^## \[|\Z)",
+              text, re.MULTILINE | re.DOTALL)
+          print((match.group(1).strip() if match
+                 else f"See CHANGELOG.md for the {version} entry."))
+          PY
+          cat release-notes.md
+
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          gh release create "$TAG" dist/* \
+            --title "AICamPro $TAG" \
+            --notes-file release-notes.md \
+            --verify-tag

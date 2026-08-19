@@ -71,6 +71,24 @@ list of things that cost real debugging time — a `QWidget { background: … }`
 rule that silently breaks every slider, a `QComboBox.findData` that compares
 tuples by identity, a `CAP_PROP_BUFFERSIZE` that halves the frame rate.
 
+## Cutting a release
+
+Releases are made by pushing a tag; nothing is uploaded by hand.
+
+1. Bump `version` in `pyproject.toml`.
+2. Move the `Unreleased` entries in `CHANGELOG.md` under the new version with
+   today's date, and add the two link definitions at the bottom.
+3. Commit, then tag and push:
+   ```bash
+   git tag -a v0.2.0 -m "AICamPro v0.2.0"
+   git push origin main --tags
+   ```
+
+`.github/workflows/release.yml` then lints, tests, checks that the tag matches
+the version in `pyproject.toml`, builds an sdist and a wheel, pulls the release
+notes out of `CHANGELOG.md`, and publishes the GitHub release with both
+artifacts attached. A mismatched tag fails the job rather than shipping.
+
 ## Reporting bugs
 
 Include the output of `./run.sh --check`, your distribution and kernel, and the
