@@ -6,7 +6,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- The AppImage's `--shell` debug flag ran before `PYTHONPATH` was extended with
+  the user runtime, so the interpreter it opened could not see PyTorch. Normal
+  launches were unaffected.
 
 ## [0.1.1] - 2026-08-20
 

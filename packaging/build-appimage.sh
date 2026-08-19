@@ -87,16 +87,16 @@ export AICAMPRO_BOOTSTRAP_PYTHON="$PY"
 export AICAMPRO_SCRIPTS="$HERE/usr/bin"
 export PATH="$HERE/usr/bin:$PATH"
 
-case "${1:-}" in
-    --setup)   exec "$HERE/usr/bin/aicampro-setup" --minimal ;;
-    --shell)   shift; exec "$PY" "$@" ;;
-esac
-
 # PyTorch được cài thẳng vào một thư mục (không venv): Python của AppImage nằm
 # ở điểm mount tạm, đổi mỗi lần chạy, nên venv trỏ vào đó hỏng ngay khi thoát.
 if [ -d "$RUNTIME" ]; then
     export PYTHONPATH="$RUNTIME${PYTHONPATH:+:$PYTHONPATH}"
 fi
+
+case "${1:-}" in
+    --setup)   exec "$HERE/usr/bin/aicampro-setup" --minimal ;;
+    --shell)   shift; exec "$PY" "$@" ;;
+esac
 
 if ! "$PY" -c 'import torch' >/dev/null 2>&1; then
     msg="AICamPro chưa có phần chạy trên GPU.
