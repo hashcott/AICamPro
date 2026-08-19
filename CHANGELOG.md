@@ -8,6 +8,31 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Nothing yet.
 
+## [0.1.1] - 2026-08-20
+
+### Added
+
+- A Debian package and an AppImage, built by the release workflow and attached
+  to every tagged release. Neither bundles PyTorch: the ROCm build is roughly
+  14 GB installed and has to match the amdgpu driver, so `aicampro-setup`
+  fetches it once into the user's own directory.
+- Desktop entry, an icon at eight sizes, and man pages for `aicampro` and
+  `aicampro-setup`.
+
+### Changed
+
+- The model directory now resolves to `$XDG_DATA_HOME/aicampro/models` when the
+  application is installed rather than run from a checkout, and honours
+  `AICAMPRO_MODEL_DIR`. Installed builds could not write to the old location.
+
+### Fixed
+
+- The installed launcher loaded the wrong copy of the application when started
+  from a directory containing `./aicampro/`, because both `python -m` and
+  `python -c` put the working directory first on `sys.path`.
+- Terminal detection in the launchers checked stdout, so a piped invocation was
+  mistaken for a desktop launch and tried to open a terminal window.
+
 ## [0.1.0] - 2026-08-20
 
 First public release. Everything below is new.
@@ -53,5 +78,6 @@ First public release. Everything below is new.
   cursor.
 - Recordings taken in the same second overwrote each other.
 
-[Unreleased]: https://github.com/hashcott/AICamPro/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/hashcott/AICamPro/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/hashcott/AICamPro/releases/tag/v0.1.1
 [0.1.0]: https://github.com/hashcott/AICamPro/releases/tag/v0.1.0

@@ -36,7 +36,8 @@ nên mọi cách cài đều tải nó một lần vào `~/.local/share/aicampro
 ### AppImage — chạy trên mọi bản phân phối
 
 ```bash
-curl -LO https://github.com/hashcott/AICamPro/releases/latest/download/AICamPro-0.1.0-x86_64.AppImage
+VERSION=0.1.1
+curl -LO https://github.com/hashcott/AICamPro/releases/download/v$VERSION/AICamPro-$VERSION-x86_64.AppImage
 chmod +x AICamPro-*.AppImage
 ./AICamPro-*.AppImage --setup     # một lần: PyTorch ROCm + model
 ./AICamPro-*.AppImage
@@ -47,8 +48,9 @@ chmod +x AICamPro-*.AppImage
 ### Debian / Ubuntu / Mint
 
 ```bash
-curl -LO https://github.com/hashcott/AICamPro/releases/latest/download/aicampro_0.1.0_all.deb
-sudo apt install ./aicampro_0.1.0_all.deb
+VERSION=0.1.1
+curl -LO https://github.com/hashcott/AICamPro/releases/download/v$VERSION/aicampro_${VERSION}_all.deb
+sudo apt install ./aicampro_${VERSION}_all.deb
 aicampro-setup                    # một lần: PyTorch ROCm + Qt + model
 aicampro
 ```

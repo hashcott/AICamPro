@@ -89,7 +89,8 @@ amdgpu driver on your machine, so every install path fetches it once into
 ### AppImage
 
 ```bash
-curl -LO https://github.com/hashcott/AICamPro/releases/latest/download/AICamPro-0.1.0-x86_64.AppImage
+VERSION=0.1.1
+curl -LO https://github.com/hashcott/AICamPro/releases/download/v$VERSION/AICamPro-$VERSION-x86_64.AppImage
 chmod +x AICamPro-*.AppImage
 ./AICamPro-*.AppImage --setup     # once: PyTorch ROCm + models
 ./AICamPro-*.AppImage
@@ -100,8 +101,9 @@ Carries its own Python, Qt, OpenCV and numpy, so it runs on any distribution.
 ### Debian, Ubuntu, Mint
 
 ```bash
-curl -LO https://github.com/hashcott/AICamPro/releases/latest/download/aicampro_0.1.0_all.deb
-sudo apt install ./aicampro_0.1.0_all.deb
+VERSION=0.1.1
+curl -LO https://github.com/hashcott/AICamPro/releases/download/v$VERSION/aicampro_${VERSION}_all.deb
+sudo apt install ./aicampro_${VERSION}_all.deb
 aicampro-setup                    # once: PyTorch ROCm + Qt + models
 aicampro
 ```
