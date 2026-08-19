@@ -1,4 +1,4 @@
-"""Cấu hình Soi: dataclass lồng nhau + lưu/nạp JSON, hỗ trợ preset."""
+"""Cấu hình AICamPro: dataclass lồng nhau + lưu/nạp JSON, hỗ trợ preset."""
 from __future__ import annotations
 
 import json
@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from pathlib import Path
 from typing import Any
 
-CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "soi"
+CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "aicampro"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 PRESET_DIR = CONFIG_DIR / "presets"
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -80,7 +80,7 @@ class OutputConfig:
     height: int = 0
     vcam_enabled: bool = False
     vcam_device: str = ""         # "" = tự chọn thiết bị v4l2loopback đầu tiên
-    record_dir: str = str(Path.home() / "Videos" / "Soi")
+    record_dir: str = str(Path.home() / "Videos" / "AICamPro")
     encoder: str = "auto"         # auto | vaapi | x264
     record_fps: int = 30
 

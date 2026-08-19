@@ -1,4 +1,4 @@
-"""Điểm khởi chạy Soi."""
+"""Điểm khởi chạy AICamPro."""
 from __future__ import annotations
 
 import argparse
@@ -8,8 +8,8 @@ import sys
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        prog="soi",
-        description="Soi — xoá nền, filter và webcam ảo, tăng tốc bằng GPU AMD.")
+        prog="aicampro",
+        description="AICamPro — xoá nền, filter và webcam ảo, tăng tốc bằng GPU AMD.")
     p.add_argument("--device", help="Đường dẫn camera, ví dụ /dev/video0")
     p.add_argument("--config", help="File cấu hình JSON thay cho mặc định")
     p.add_argument("--list-devices", action="store_true",
@@ -46,7 +46,7 @@ def _check() -> int:
     info = gpu_device.detect()
     print(f"Thiết bị tính toán : {info.summary()}")
     if not info.is_gpu:
-        print("  ⚠ Không thấy GPU qua ROCm — Soi sẽ chạy trên CPU (rất chậm).")
+        print("  ⚠ Không thấy GPU qua ROCm — AICamPro sẽ chạy trên CPU (rất chậm).")
     models = seg.available_models()
     print(f"Model tách nền     : {', '.join(models) if models else '(chưa có)'}")
     if not models:
@@ -81,8 +81,8 @@ def main(argv: list[str] | None = None) -> int:
 
     QApplication.setAttribute(Qt.AA_DontUseNativeMenuBar, False)
     app = QApplication(sys.argv[:1])
-    app.setApplicationName("Soi")
-    app.setApplicationDisplayName("Soi")
+    app.setApplicationName("AICamPro")
+    app.setApplicationDisplayName("AICamPro")
     app.setWindowIcon(QIcon())
     app.setStyleSheet(build_stylesheet())
 

@@ -1,4 +1,4 @@
-"""Cửa sổ chính Soi."""
+"""Cửa sổ chính AICamPro."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -43,7 +43,7 @@ class MainWindow(QMainWindow):
         self._loading = False
         self._last_frame: Frame | None = None
 
-        # Qt tự nối applicationDisplayName ("Soi") vào sau, nên không lặp tên ở đây
+        # Qt tự nối applicationDisplayName ("AICamPro") vào sau, nên không lặp tên ở đây
         self.setWindowTitle("Webcam AI tăng tốc bằng GPU AMD")
         self.resize(1440, 860)
 
@@ -81,7 +81,7 @@ class MainWindow(QMainWindow):
         row = QHBoxLayout()
         row.setSpacing(10)
 
-        title = QLabel("Soi")
+        title = QLabel("AICamPro")
         title.setObjectName("Title")
         row.addWidget(title)
 
@@ -205,7 +205,7 @@ class MainWindow(QMainWindow):
     def _section_camera(self) -> Section:
         """Control phần cứng của camera — dựng lại mỗi khi đổi thiết bị."""
         s = Section("Camera (phần cứng)", expanded=False)
-        s.add_hint("Các giá trị này do camera lưu và giữ nguyên sau khi thoát Soi. "
+        s.add_hint("Các giá trị này do camera lưu và giữ nguyên sau khi thoát AICamPro. "
                    "Hình quá tối hoặc cháy sáng thì bật lại «Phơi sáng tự động».")
         self._camera_box = QWidget()
         self._camera_form = QVBoxLayout(self._camera_box)

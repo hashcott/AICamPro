@@ -9,23 +9,23 @@ tên định danh trong code giữ tiếng Anh. Giữ nguyên quy ước này kh
 
 ## Lệnh thường dùng
 
-Mọi thứ chạy trong môi trường conda `soi` (Python 3.12 + PyTorch ROCm):
+Mọi thứ chạy trong môi trường conda `aicampro` (Python 3.12 + PyTorch ROCm):
 
 ```bash
-source ~/miniconda3/etc/profile.d/conda.sh && conda activate soi
+source ~/miniconda3/etc/profile.d/conda.sh && conda activate aicampro
 ```
 
 | Việc | Lệnh |
 |---|---|
-| Chạy app | `./run.sh` (tự activate conda rồi `python -m soi`) |
+| Chạy app | `./run.sh` (tự activate conda rồi `python -m aicampro`) |
 | Kiểm tra GPU / model / thiết bị | `./run.sh --check` |
 | Liệt kê camera + webcam ảo | `./run.sh --list-devices` |
 | Dựng lại môi trường | `./scripts/setup_env.sh` |
 | Tải model tách nền | `./scripts/download_models.sh [all]` |
 | Tạo thiết bị webcam ảo (một lần, cần sudo) | `sudo ./scripts/setup_v4l2loopback.sh` |
 | Sinh lại LUT + ảnh nền mẫu | `python scripts/make_assets.py` |
-| Cổng kiểm tra cú pháp nhanh | `python -m compileall -q soi` |
-| Lint | `ruff check soi` (line-length 100, cấu hình trong `pyproject.toml`) |
+| Cổng kiểm tra cú pháp nhanh | `python -m compileall -q aicampro` |
+| Lint | `ruff check aicampro` (line-length 100, cấu hình trong `pyproject.toml`) |
 
 **Test:** `python -m pytest tests/` (26 test, ~8 giây, cần GPU — tự bỏ qua nếu không có).
 Chạy một test: `python -m pytest "tests/test_config_wiring.py::test_setting_changes_output[filters.gamma]"`.
@@ -46,13 +46,13 @@ Cách xác minh thủ công thêm:
 - Đo pipeline không cần GUI: viết script ngắn ghép `CameraCapture` →
   `create_matter` → `BackgroundCompositor` → `FilterStack` → `AutoFramer`, xuất ảnh
   ra file rồi xem bằng mắt. Đây là cách nhanh nhất để kiểm tra thay đổi trong `gpu/`.
-- Kiểm tra GUI: chạy `python -m soi` rồi
-  `import -window $(xdotool search --name 'Soi — ' | head -1) out.png`.
-  Cửa sổ có tên bắt đầu bằng `Soi` nhưng chỉ cửa sổ `Soi — …` là cửa sổ thật;
-  còn một cửa sổ phụ 1×1 cùng tên `Soi` (`import -window` sẽ thất bại trên nó).
+- Kiểm tra GUI: chạy `python -m aicampro` rồi
+  `import -window $(xdotool search --name 'AICamPro — ' | head -1) out.png`.
+  Cửa sổ có tên bắt đầu bằng `AICamPro` nhưng chỉ cửa sổ `AICamPro — …` là cửa sổ thật;
+  còn một cửa sổ phụ 1×1 cùng tên `AICamPro` (`import -window` sẽ thất bại trên nó).
 - Chỉ có **một** camera vật lý, và nó không mở được hai lần. Tắt GUI trước khi
   chạy script đọc camera: `pgrep -f "\-m proca[m]" | xargs -r kill`.
-  (Đừng dùng `pkill -f "python -m soi"` — chuỗi đó khớp với chính lệnh shell
+  (Đừng dùng `pkill -f "python -m aicampro"` — chuỗi đó khớp với chính lệnh shell
   đang chạy nên sẽ tự kill luôn.)
 
 ## Kiến trúc
@@ -75,7 +75,7 @@ CameraCapture._loop  →  Pipeline.run  ──frameReady──────→  M
 - `CameraCapture` chỉ giữ khung **mới nhất** (không hàng đợi), nên pipeline chậm
   sẽ bỏ khung chứ không tăng độ trễ.
 
-### Quy ước tensor trong `soi/gpu/`
+### Quy ước tensor trong `aicampro/gpu/`
 
 Mọi hàm nhận và trả `(1, 3, H, W)` float 0..1 thứ tự **RGB**; alpha là `(1, 1, H, W)`.
 Camera trả BGR uint8 HWC. Việc chuyển đổi xảy ra đúng **một lần** ở đầu và cuối
@@ -111,8 +111,8 @@ nhận biết qua tên file chứa `fp16`. `downsample_ratio` mặc định tín
 
 ### Cấu hình
 
-`AppConfig` là cây dataclass, lưu ở `~/.config/soi/config.json`, preset ở
-`~/.config/soi/presets/`. `_merge` khoan dung: bỏ qua khoá lạ, ép kiểu, không
+`AppConfig` là cây dataclass, lưu ở `~/.config/aicampro/config.json`, preset ở
+`~/.config/aicampro/presets/`. `_merge` khoan dung: bỏ qua khoá lạ, ép kiểu, không
 làm hỏng config khi thêm trường mới. Preset cố tình **không** lưu `output` và
 `capture.device` để chia sẻ được giữa máy khác nhau. Đường dẫn tương đối (ảnh nền,
 LUT) đi qua `resolve_asset()` — thử theo CWD rồi tới gốc repo.
@@ -135,7 +135,7 @@ Những thứ này đã tốn thời gian debug một lần, đừng lặp lại
   `background: transparent`.
 - **QSS không hiểu mẹo vẽ tam giác bằng `border-left/right/top` của CSS.**
   `QComboBox::down-arrow` chỉ nhận `image: url(...)`. `style._arrow_icon()` vẽ sẵn
-  một PNG vào `~/.cache/soi/` nên không phải kèm file ảnh vào repo — vì thế
+  một PNG vào `~/.cache/aicampro/` nên không phải kèm file ảnh vào repo — vì thế
   stylesheet là hàm `build_stylesheet()`, phải gọi **sau** khi có QApplication.
 - **QSS không tạo được núm trượt cho `QCheckBox::indicator`** — chỉ đổi được màu nền
   nên công tắc trông như viên thuốc đặc. `ToggleSwitch` tự vẽ bằng QPainter.
@@ -167,7 +167,7 @@ Những thứ này đã tốn thời gian debug một lần, đừng lặp lại
   thành công khi refcount trong `/proc/modules` bằng 0.
 - **modprobe đọc mọi file trong `/etc/modprobe.d` theo thứ tự abc, file SAU ghi đè
   file trước.** Máy có thể đã có cấu hình v4l2loopback của OBS/Iriun/ProVCam; file
-  của Soi đặt tên `zz-…` để đọc sau cùng và phải **gộp** cả thiết bị của các
+  của AICamPro đặt tên `zz-…` để đọc sau cùng và phải **gộp** cả thiết bị của các
   ứng dụng kia, nếu không sẽ làm mất webcam ảo của chúng.
 - **Thiết bị v4l2loopback có thể khai báo KHÔNG có cả CAPTURE lẫn OUTPUT** (thấy
   `caps=0x05200000` trên thiết bị của OBS). Lúc đó không ứng dụng nào ghi vào được,

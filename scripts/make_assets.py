@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sinh bộ LUT (.cube) và ảnh nền mẫu cho Soi.
+"""Sinh bộ LUT (.cube) và ảnh nền mẫu cho AICamPro.
 
 Chạy lại bất cứ lúc nào:  python scripts/make_assets.py
 """

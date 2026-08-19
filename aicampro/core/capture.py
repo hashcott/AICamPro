@@ -47,7 +47,7 @@ class CameraCapture:
             return
         self.open()
         self._stop.clear()
-        self._thread = threading.Thread(target=self._loop, name="soi-capture", daemon=True)
+        self._thread = threading.Thread(target=self._loop, name="aicampro-capture", daemon=True)
         self._thread.start()
 
     def stop(self) -> None:

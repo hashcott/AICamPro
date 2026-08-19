@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Tạo môi trường conda "soi" với PyTorch ROCm cho GPU AMD.
+# Tạo môi trường conda "aicampro" với PyTorch ROCm cho GPU AMD.
 set -euo pipefail
-ENV_NAME="${ENV_NAME:-soi}"
+ENV_NAME="${ENV_NAME:-aicampro}"
 PY_VER="${PY_VER:-3.12}"
 ROCM_CHANNEL="${ROCM_CHANNEL:-rocm6.4}"
 CONDA_BASE="${CONDA_BASE:-$HOME/miniconda3}"

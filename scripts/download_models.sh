@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tải model tách nền cho Soi.
+# Tải model tách nền cho AICamPro.
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/models"
 mkdir -p "$DIR"

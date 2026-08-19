@@ -1,4 +1,4 @@
-"""Bảng màu và stylesheet tối cho Soi.
+"""Bảng màu và stylesheet tối cho AICamPro.
 
 Lưu ý: KHÔNG đặt `background` trong quy tắc `QWidget` chung. Qt sẽ áp nó cho mọi
 widget con (QLabel, QSlider…), khiến chúng tự tô một hình chữ nhật tối đè lên nền
@@ -31,7 +31,7 @@ def _arrow_icon() -> str:
     from PySide6.QtCore import QPointF, Qt
     from PySide6.QtGui import QBrush, QColor, QPainter, QPixmap, QPolygonF
 
-    cache = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "soi"
+    cache = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "aicampro"
     cache.mkdir(parents=True, exist_ok=True)
     path = cache / "arrow-down.png"
     if not path.exists():
