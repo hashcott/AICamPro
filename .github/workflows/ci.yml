@@ -63,6 +63,22 @@ jobs:
       - run: pip install shellcheck-py==0.11.0.1
       - run: shellcheck run.sh scripts/*.sh packaging/*.sh packaging/aicampro-setup
 
+  deb:
+    name: deb package
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: ./packaging/build-deb.sh
+      - name: lintian must be clean
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends lintian
+          lintian --fail-on warning --tag-display-limit 0 dist/*.deb
+
   build:
     name: build sdist and wheel
     runs-on: ubuntu-latest

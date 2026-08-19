@@ -58,10 +58,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { ref: "${{ github.event.inputs.tag || github.ref }}" }
-      - run: sudo apt-get update && sudo apt-get install -y fakeroot lintian
+      # Không cài gì qua apt: dpkg-deb --root-owner-group thay được fakeroot, và
+      # apt trên runner thỉnh thoảng treo vô hạn ở bước update. Cổng lintian nằm
+      # trong workflow CI, chạy trên mọi lần push.
       - run: ./packaging/build-deb.sh
-      - name: lintian must be clean
-        run: lintian --fail-on warning --tag-display-limit 0 dist/*.deb
       - uses: actions/upload-artifact@v4
         with: { name: deb, path: dist/*.deb }
 

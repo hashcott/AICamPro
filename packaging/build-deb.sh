@@ -152,7 +152,9 @@ chmod 0644 "$DEST/DEBIAN/md5sums"
 echo "→ đóng gói"
 mkdir -p "$OUT"
 DEB="$OUT/${PKG}_${VERSION}_all.deb"
-fakeroot dpkg-deb --build -Zxz "$DEST" "$DEB" >/dev/null
+# --root-owner-group đặt chủ sở hữu root:root mà không cần fakeroot, nên máy
+# build không phải cài thêm gói nào ngoài dpkg.
+dpkg-deb --root-owner-group --build -Zxz "$DEST" "$DEB" >/dev/null
 echo "✓ $DEB ($(du -h "$DEB" | cut -f1))"
 
 if command -v lintian >/dev/null 2>&1; then
