@@ -11,11 +11,30 @@ from typing import Any
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "aicampro"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 PRESET_DIR = CONFIG_DIR / "presets"
+DATA_DIR = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / "aicampro"
 PACKAGE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PACKAGE_DIR.parent
 # assets nằm TRONG gói để wheel mang theo được; model tải riêng nên ở ngoài
 ASSET_DIR = PACKAGE_DIR / "assets"
-MODEL_DIR = REPO_ROOT / "models"
+
+
+def _resolve_model_dir() -> Path:
+    """Nơi chứa model tách nền.
+
+    Chạy từ bản clone thì dùng `models/` trong repo cho tiện. Khi đã cài (deb,
+    AppImage, wheel) thư mục gói nằm dưới /usr hoặc trong AppDir và không ghi
+    được, nên phải rơi về thư mục dữ liệu của người dùng.
+    """
+    override = os.environ.get("AICAMPRO_MODEL_DIR")
+    if override:
+        return Path(override).expanduser()
+    repo_models = REPO_ROOT / "models"
+    if (REPO_ROOT / "pyproject.toml").exists() or repo_models.is_dir():
+        return repo_models
+    return DATA_DIR / "models"
+
+
+MODEL_DIR = _resolve_model_dir()
 
 
 @dataclass

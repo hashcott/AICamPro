@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
 # Tải model tách nền cho AICamPro.
 set -euo pipefail
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/models"
+# Cùng cách xác định như aicampro.config: biến môi trường thắng, rồi tới models/
+# trong repo, cuối cùng là thư mục dữ liệu người dùng (dùng khi đã cài từ gói).
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ -n "${AICAMPRO_MODEL_DIR:-}" ]]; then
+  DIR="$AICAMPRO_MODEL_DIR"
+elif [[ -f "$REPO_ROOT/pyproject.toml" ]]; then
+  DIR="$REPO_ROOT/models"
+else
+  DIR="${XDG_DATA_HOME:-$HOME/.local/share}/aicampro/models"
+fi
 mkdir -p "$DIR"
 
 RVM_BASE="https://github.com/PeterL1n/RobustVideoMatting/releases/download/v1.0.0"

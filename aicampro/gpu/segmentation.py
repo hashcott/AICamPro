@@ -120,9 +120,11 @@ def create_matter(model_name: str, device: str, downsample: float = 0.0) -> Matt
     if not path.exists():
         candidates = available_models()
         if not candidates:
+            from ..config import REPO_ROOT
+            hint = ("./scripts/download_models.sh"
+                    if (REPO_ROOT / "pyproject.toml").exists() else "aicampro-setup")
             raise FileNotFoundError(
-                f"Không tìm thấy model tách nền trong {MODEL_DIR}.\n"
-                f"Chạy: ./scripts/download_models.sh"
+                f"Không tìm thấy model tách nền trong {MODEL_DIR}.\nChạy: {hint}"
             )
         path = MODEL_DIR / f"{candidates[0]}.torchscript"
     return RVMMatter(path, device, downsample)

@@ -19,6 +19,14 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     return p.parse_args(argv)
 
 
+def _model_hint() -> str:
+    """Lệnh tải model, khác nhau giữa bản clone và bản đã cài."""
+    from .config import REPO_ROOT
+    if (REPO_ROOT / "pyproject.toml").exists():
+        return "./scripts/download_models.sh"
+    return "aicampro-setup"
+
+
 def _list_devices() -> int:
     from .core import v4l2
     cams = v4l2.capture_devices()
@@ -50,7 +58,7 @@ def _check() -> int:
     models = seg.available_models()
     print(f"Model tách nền     : {', '.join(models) if models else '(chưa có)'}")
     if not models:
-        print("  ⚠ Chạy ./scripts/download_models.sh để tải model.")
+        print(f"  ⚠ Chạy {_model_hint()} để tải model.")
     _list_devices()
     return 0
 
