@@ -58,7 +58,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install shellcheck-py==0.11.0.1
-      - run: shellcheck run.sh scripts/*.sh
+      - run: shellcheck run.sh scripts/*.sh packaging/*.sh packaging/aicampro-setup
 
   build:
     name: build sdist and wheel
