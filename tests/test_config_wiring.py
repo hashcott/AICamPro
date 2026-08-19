@@ -8,18 +8,21 @@ từng thiết lập phải để lại dấu vết trên ảnh ra.
 """
 from __future__ import annotations
 
-import numpy as np
 import pytest
 
+# importorskip phải chạy TRƯỚC mọi import nặng, nếu không việc thu thập test sẽ
+# hỏng trên máy không có GPU thay vì bỏ qua gọn gàng.
 torch = pytest.importorskip("torch")
+np = pytest.importorskip("numpy")
+pytest.importorskip("cv2")
 pytestmark = pytest.mark.skipif(not torch.cuda.is_available(),
                                 reason="cần GPU (ROCm/CUDA)")
 
-from aicampro.config import ASSET_DIR, AppConfig          # noqa: E402
-from aicampro.core.pipeline import Pipeline               # noqa: E402
-from aicampro.gpu import segmentation as seg              # noqa: E402
-from aicampro.gpu.compose import BackgroundCompositor     # noqa: E402
-from aicampro.gpu.filters import FilterStack              # noqa: E402
+from aicampro.config import ASSET_DIR, AppConfig
+from aicampro.core.pipeline import Pipeline
+from aicampro.gpu import segmentation as seg
+from aicampro.gpu.compose import BackgroundCompositor
+from aicampro.gpu.filters import FilterStack
 
 BG_IMAGE = ASSET_DIR / "backgrounds" / "02_sunset_gradient.jpg"
 LUT = ASSET_DIR / "luts" / "02_cool_cinema.cube"
