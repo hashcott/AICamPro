@@ -117,6 +117,23 @@ làm hỏng config khi thêm trường mới. Preset cố tình **không** lưu 
 `capture.device` để chia sẻ được giữa máy khác nhau. Đường dẫn tương đối (ảnh nền,
 LUT) đi qua `resolve_asset()` — thử theo CWD rồi tới gốc repo.
 
+## Đóng gói
+
+Cả `.deb` lẫn AppImage đều **không** mang PyTorch. Bản ROCm nặng 14 GB sau khi
+cài — 13 GB trong đó là thư viện ROCm nhúng trong wheel (rccl 2,1 GB, magma
+952 MB…) — và phải khớp driver amdgpu, nên `aicampro-setup` tải nó một lần vào
+`~/.local/share/aicampro/`.
+
+Hai chế độ, hai cơ chế khác nhau, và khác biệt này là bắt buộc:
+
+- **.deb** dùng venv tại `~/.local/share/aicampro/venv`, tạo bằng python3 hệ
+  thống. Đường dẫn interpreter ổn định nên venv sống lâu dài.
+- **AppImage** dùng `pip install --target ~/.local/share/aicampro/runtime`,
+  **không** venv. Python của AppImage nằm ở `/tmp/.mount_XXXX`, đổi mỗi lần
+  chạy và biến mất khi thoát — venv tạo từ nó có symlink `bin/python3` và
+  `pyvenv.cfg` trỏ vào hư vô ngay khi ứng dụng đóng. Một thư mục phẳng ghép vào
+  `PYTHONPATH` không có interpreter nào để hỏng.
+
 ## Cạm bẫy đã gặp
 
 Những thứ này đã tốn thời gian debug một lần, đừng lặp lại:
@@ -146,6 +163,17 @@ Những thứ này đã tốn thời gian debug một lần, đừng lặp lại
 - **Thứ nguy hiểm nhất là tính năng hỏng mà không kêu.** Nhánh dự phòng nên nói ra:
   `Pipeline._sync_background` phát cảnh báo khi ở chế độ ảnh mà chưa có ảnh, thay vì
   âm thầm vẽ màu đặc.
+- **`python -m` và `python -c` đều đặt thư mục hiện tại lên đầu `sys.path`.**
+  Lệnh đã cài chạy từ một thư mục có sẵn `./aicampro/` sẽ nạp nhầm bản đó.
+  Launcher chèn thẳng thư mục cài đặt vào vị trí 0.
+- **Phát hiện terminal phải xét `-t 0` và `-t 2` riêng.** Xét `-t 1` (stdout)
+  khiến một lệnh bị pipe trông như được gọi từ biểu tượng desktop — launcher đã
+  từng tự mở hẳn một cửa sổ terminal và chạy setup 15 GB vì chuyện này.
+- **Qt vẽ SVG theo chuẩn Tiny nên bỏ qua `clipPath`** — hình bị cắt sẽ tràn ra
+  thành khối chữ nhật. Icon phải dựng từ các hình tự nằm gọn trong vùng cần.
+- **`apt-get` trên runner GitHub thỉnh thoảng treo vô hạn.** Job phát hành
+  không cài gì qua apt: `dpkg-deb --root-owner-group` thay được fakeroot. Mọi
+  job đều có `timeout-minutes` để một lần treo tốn phút chứ không tốn 6 giờ.
 - **`CAP_PROP_BUFFERSIZE = 1` làm tụt một nửa fps** với backend V4L2 (30 → 16 fps).
   Dùng `2`.
 - **PySide6 `QComboBox.findData()` so sánh object Python theo identity**, không theo
