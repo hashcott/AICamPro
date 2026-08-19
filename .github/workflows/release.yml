@@ -20,6 +20,7 @@ jobs:
   check:
     name: lint and test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with: { ref: "${{ github.event.inputs.tag || github.ref }}" }
@@ -39,6 +40,7 @@ jobs:
     name: sdist and wheel
     needs: check
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with: { ref: "${{ github.event.inputs.tag || github.ref }}" }
@@ -52,6 +54,7 @@ jobs:
     name: deb package
     needs: check
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with: { ref: "${{ github.event.inputs.tag || github.ref }}" }
@@ -66,11 +69,14 @@ jobs:
     name: AppImage
     needs: check
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with: { ref: "${{ github.event.inputs.tag || github.ref }}" }
-      # appimagetool needs FUSE to self-mount; the runner has libfuse2 available
-      - run: sudo apt-get update && sudo apt-get install -y libfuse2t64 || sudo apt-get install -y libfuse2
+      # No libfuse2 here on purpose: build-appimage.sh runs appimagetool with
+      # --appimage-extract-and-run, so nothing needs to mount. Installing it was
+      # not just redundant, it hung the job -- apt on 24.04 wants to swap
+      # libfuse2 against libfuse2t64 and waits for an answer that never comes.
       - run: ./packaging/build-appimage.sh
       - uses: actions/upload-artifact@v4
         with: { name: appimage, path: dist/*.AppImage }
@@ -79,6 +85,7 @@ jobs:
     name: publish
     needs: [python, deb, appimage]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with: { ref: "${{ github.event.inputs.tag || github.ref }}" }
