@@ -15,11 +15,11 @@ torch = pytest.importorskip("torch")
 pytestmark = pytest.mark.skipif(not torch.cuda.is_available(),
                                 reason="cần GPU (ROCm/CUDA)")
 
-from procam.config import ASSET_DIR, AppConfig          # noqa: E402
-from procam.core.pipeline import Pipeline               # noqa: E402
-from procam.gpu import segmentation as seg              # noqa: E402
-from procam.gpu.compose import BackgroundCompositor     # noqa: E402
-from procam.gpu.filters import FilterStack              # noqa: E402
+from soi.config import ASSET_DIR, AppConfig          # noqa: E402
+from soi.core.pipeline import Pipeline               # noqa: E402
+from soi.gpu import segmentation as seg              # noqa: E402
+from soi.gpu.compose import BackgroundCompositor     # noqa: E402
+from soi.gpu.filters import FilterStack              # noqa: E402
 
 BG_IMAGE = ASSET_DIR / "backgrounds" / "02_sunset_gradient.jpg"
 LUT = ASSET_DIR / "luts" / "02_cool_cinema.cube"
@@ -71,7 +71,7 @@ class FakeMatter(seg.Matter):
         head = (((xs - cx) / rx) ** 2 + ((ys - cy) / ry) ** 2) <= 1.0
         a = torch.maximum(a, head.float())
         # biên mềm như alpha thật, nếu không các thiết lập chỉnh biên sẽ vô hiệu
-        from procam.gpu import ops
+        from soi.gpu import ops
         a = ops.gaussian_blur(a, 2.5).clamp(0, 1)
         return a, rgb * a          # fgr: chủ thể đã tách khỏi nền
 

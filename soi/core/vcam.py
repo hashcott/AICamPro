@@ -44,7 +44,7 @@ class VirtualCamera:
                         f"Có thiết bị v4l2loopback ({names}) nhưng không cái nào nhận "
                         "được luồng ghi vào — thường do thiết bị của ứng dụng khác "
                         "(OBS…) dựng với exclusive_caps và đang kẹt trạng thái.\n"
-                        "Tạo thiết bị riêng cho ProCam:\n"
+                        "Tạo thiết bị riêng cho Soi:\n"
                         "  sudo ./scripts/setup_v4l2loopback.sh"
                     )
                 raise VirtualCameraError(
@@ -63,7 +63,7 @@ class VirtualCamera:
             hint = ""
             if "not a video output" in str(exc).lower():
                 hint = ("\nThiết bị này không khai báo khả năng nhận luồng ghi vào.\n"
-                        "Tạo thiết bị riêng cho ProCam:  sudo ./scripts/setup_v4l2loopback.sh")
+                        "Tạo thiết bị riêng cho Soi:  sudo ./scripts/setup_v4l2loopback.sh")
             raise VirtualCameraError(
                 f"Không mở được webcam ảo {device}: {exc}{hint}") from exc
         self.device = device

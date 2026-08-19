@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
-# Tạo thiết bị webcam ảo cho ProCam.
+# Tạo thiết bị webcam ảo cho Soi.
 #
 # Hai cái bẫy mà script này phải xử lý:
 #   1. `modprobe` trên module ĐÃ nạp sẽ bỏ qua mọi tham số, không báo lỗi.
 #      Muốn đổi cấu hình bắt buộc phải gỡ module ra rồi nạp lại.
 #   2. modprobe đọc mọi file trong /etc/modprobe.d theo thứ tự abc và file SAU
 #      ghi đè file trước. Máy có thể đã có sẵn cấu hình của OBS, Iriun, ProVCam…
-#      nên file của ProCam phải sắp xếp sau cùng và phải gộp cả thiết bị của
+#      nên file của Soi phải sắp xếp sau cùng và phải gộp cả thiết bị của
 #      những ứng dụng kia, nếu không sẽ làm hỏng webcam ảo của chúng.
 set -euo pipefail
 
 DEVICE_NR="${DEVICE_NR:-42}"
-LABEL="${LABEL:-ProCam Virtual Camera}"
-# exclusive_caps=0 cho thiết bị của ProCam.
+LABEL="${LABEL:-Soi Virtual Camera}"
+# exclusive_caps=0 cho thiết bị của Soi.
 #   Ý tưởng của exclusive_caps=1 là: khai báo OUTPUT khi chưa có nguồn ghi, đổi sang
 #   CAPTURE khi đã có. Nhưng trên v4l2loopback 0.12.7 / kernel 6.8 nó khai báo
 #   KHÔNG có cả hai (caps=0x05200000) nên không ứng dụng nào ghi vào được.
-#   Với =0 thiết bị luôn khai báo cả hai — ProCam ghi được, OBS/Zoom/Meet thấy được.
+#   Với =0 thiết bị luôn khai báo cả hai — Soi ghi được, OBS/Zoom/Meet thấy được.
 #   Đặt EXCLUSIVE_CAPS=1 nếu ứng dụng nào đó của bạn đòi hỏi kiểu cũ.
 EXCLUSIVE="${EXCLUSIVE_CAPS:-0}"
-CONF="/etc/modprobe.d/zz-procam-v4l2loopback.conf"   # tên bắt đầu bằng zz để ghi đè các file khác
+CONF="/etc/modprobe.d/zz-soi-v4l2loopback.conf"   # tên bắt đầu bằng zz để ghi đè các file khác
 
 die() { echo "✗ $*" >&2; exit 1; }
 info() { echo "→ $*"; }
@@ -46,7 +46,7 @@ if [[ ${#NRS[@]} -gt 0 ]]; then
   info "thiết bị loopback đang có: ${NRS[*]} (${LABELS[*]})"
 fi
 
-# thêm ProCam nếu chưa có
+# thêm Soi nếu chưa có
 already=0
 for i in "${!NRS[@]}"; do
   [[ "${NRS[$i]}" == "$DEVICE_NR" ]] && { LABELS[$i]="$LABEL"; CAPS[$i]="$EXCLUSIVE"; already=1; }
@@ -71,14 +71,15 @@ fi
 join() { local IFS=","; echo "$*"; }
 PARAMS="devices=${#NRS[@]} video_nr=$(join "${NRS[@]}") card_label=\"$(join "${LABELS[@]}")\" exclusive_caps=$(join "${CAPS[@]}")"
 
-rm -f /etc/modprobe.d/procam-v4l2loopback.conf      # file sai từ bản script cũ
+# dọn file của các bản script cũ (thời app còn tên ProCam) để khỏi cấu hình chồng nhau
+rm -f /etc/modprobe.d/procam-v4l2loopback.conf /etc/modprobe.d/zz-procam-v4l2loopback.conf
 cat > "$CONF" <<CONFEOF
-# Do ProCam tạo. Gộp toàn bộ thiết bị v4l2loopback của máy vào một chỗ vì
+# Do Soi tạo. Gộp toàn bộ thiết bị v4l2loopback của máy vào một chỗ vì
 # modprobe chỉ dùng giá trị của file được đọc SAU CÙNG.
 options v4l2loopback $PARAMS
 CONFEOF
-echo "v4l2loopback" > /etc/modules-load.d/zz-procam-v4l2loopback.conf
-rm -f /etc/modules-load.d/procam-v4l2loopback.conf
+echo "v4l2loopback" > /etc/modules-load.d/zz-soi-v4l2loopback.conf
+rm -f /etc/modules-load.d/procam-v4l2loopback.conf /etc/modules-load.d/zz-procam-v4l2loopback.conf
 
 info "cấu hình: $PARAMS"
 

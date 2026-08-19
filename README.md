@@ -1,4 +1,4 @@
-# ProCam
+# Soi
 
 Webcam AI cho Linux, tăng tốc bằng **GPU AMD qua ROCm**: xoá / làm mờ / thay nền,
 bộ lọc màu và làm đẹp, tự động bám chủ thể, xuất ra **webcam ảo** dùng được trong
@@ -107,7 +107,7 @@ làm đổi khung hình ra. Thêm thiết lập mới nhớ thêm một dòng v�
 ## Kiến trúc
 
 ```
-procam/
+soi/
 ├── core/
 │   ├── v4l2.py        truy vấn thiết bị qua ioctl (không cần v4l-utils)
 │   ├── capture.py     luồng đọc camera, luôn giữ khung mới nhất
@@ -140,7 +140,7 @@ Model tách nền là [RobustVideoMatting](https://github.com/PeterL1n/RobustVid
 — mạng hồi tiếp, nên alpha ổn định theo thời gian thay vì nhấp nháy như các model
 tách từng khung độc lập. Trạng thái hồi tiếp được reset khi đổi độ phân giải hoặc model.
 
-Cấu hình lưu tại `~/.config/procam/config.json`, preset tại `~/.config/procam/presets/`.
+Cấu hình lưu tại `~/.config/soi/config.json`, preset tại `~/.config/soi/presets/`.
 
 ---
 
@@ -154,10 +154,10 @@ Vài thứ đã đo được trên chính máy này, ghi lại để khỏi ph�
   giá trị. Tuple `(1280, 720)` dựng lúc chạy sẽ không khớp với tuple cùng giá trị đã
   lưu trong combo. `LabeledCombo._select()` tự so sánh bằng `==` để tránh chuyện này.
 - **Webcam ảo của OBS (`exclusive_caps=1`) không nhận ghi từ ứng dụng khác.**
-  Hãy tạo thiết bị riêng cho ProCam bằng `scripts/setup_v4l2loopback.sh`.
+  Hãy tạo thiết bị riêng cho Soi bằng `scripts/setup_v4l2loopback.sh`.
 - **Thiết lập phơi sáng/WB do camera UVC lưu trên chính thiết bị**, không phải trong
   ứng dụng — đặt phơi sáng thủ công rồi thoát app thì lần sau mở lên hình vẫn tối.
-  ProCam phát hiện trạng thái này lúc khởi động và cảnh báo.
+  Soi phát hiện trạng thái này lúc khởi động và cảnh báo.
 - **Quy tắc QSS `QWidget { background: … }` phá giao diện Qt.** Nó áp cho mọi widget
   con nên QLabel hiện thành ô tối, còn QSlider nuốt kích thước groove/handle. Nền
   chỉ đặt cho vùng chứa; QLabel và QSlider để `transparent`.

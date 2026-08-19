@@ -71,7 +71,7 @@ class Recorder:
 
         directory = Path(out_dir).expanduser()
         directory.mkdir(parents=True, exist_ok=True)
-        path = _unique(directory / f"procam_{datetime.now():%Y%m%d_%H%M%S}.mp4")
+        path = _unique(directory / f"soi_{datetime.now():%Y%m%d_%H%M%S}.mp4")
 
         if encoder == "auto":
             encoder = available_encoders()[0]
@@ -144,9 +144,9 @@ def snapshot(bgr: np.ndarray, out_dir: str, alpha: np.ndarray | None = None) -> 
     directory.mkdir(parents=True, exist_ok=True)
     stamp = f"{datetime.now():%Y%m%d_%H%M%S_%f}"[:-3]
     if alpha is not None:
-        path = _unique(directory / f"procam_{stamp}.png")
+        path = _unique(directory / f"soi_{stamp}.png")
         cv2.imwrite(str(path), np.dstack([bgr, alpha]))
     else:
-        path = _unique(directory / f"procam_{stamp}.jpg")
+        path = _unique(directory / f"soi_{stamp}.jpg")
         cv2.imwrite(str(path), bgr, [cv2.IMWRITE_JPEG_QUALITY, 95])
     return path

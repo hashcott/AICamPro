@@ -1,5 +1,5 @@
 [project]
-name = "procam"
+name = "soi"
 version = "0.1.0"
 description = "Webcam AI cho Linux: xoá/thay nền, filter màu, làm đẹp, auto-framing — tăng tốc bằng GPU AMD qua ROCm"
 readme = "README.md"
@@ -15,14 +15,14 @@ dependencies = [
 ]
 
 [project.scripts]
-procam = "procam.__main__:main"
+soi = "soi.__main__:main"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["procam*"]
+include = ["soi*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
