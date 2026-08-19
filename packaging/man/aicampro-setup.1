@@ -1,0 +1,38 @@
+.TH AICAMPRO-SETUP 1 "2026-08-20" "AICamPro 0.1.0" "User Commands"
+.SH NAME
+aicampro\-setup \- build the GPU runtime AICamPro needs
+.SH SYNOPSIS
+.B aicampro-setup
+.SH DESCRIPTION
+Creates a per-user Python environment under
+.I ~/.local/share/aicampro/venv
+and installs PyTorch built for ROCm, Qt, OpenCV and the matting models into it.
+.PP
+This is separate from the package because the ROCm build of PyTorch is roughly
+14 GB installed \(em 13 GB of that being the ROCm libraries bundled inside the
+wheel \(em and it has to match the amdgpu driver on the machine. Shipping it
+inside a .deb or an AppImage is not practical.
+.PP
+Running it again is safe: it reuses an existing environment and skips anything
+already downloaded.
+.SH ENVIRONMENT
+.TP
+.B ROCM_CHANNEL
+PyTorch ROCm wheel index to install from. Defaults to
+.IR rocm6.4 .
+.TP
+.B AICAMPRO_BOOTSTRAP_PYTHON
+Interpreter used to create the environment. The AppImage passes its own so
+that PyTorch matches the Python ABI the application runs on.
+.TP
+.B AICAMPRO_MODEL_DIR
+Where to place the matting models.
+.SH DIAGNOSTICS
+Warns when no AMD GPU is visible, and when the invoking user is not in the
+.B render
+group \(em without it ROCm cannot reach the card even though the driver is
+loaded.
+.SH SEE ALSO
+.BR aicampro (1)
+.SH AUTHOR
+Harry Nguyen <duchanhstyle@gmail.com>

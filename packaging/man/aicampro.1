@@ -1,0 +1,76 @@
+.TH AICAMPRO 1 "2026-08-20" "AICamPro 0.1.0" "User Commands"
+.SH NAME
+aicampro \- AI webcam with background removal, accelerated on AMD GPUs
+.SH SYNOPSIS
+.B aicampro
+.RI [ OPTIONS ]
+.SH DESCRIPTION
+.B AICamPro
+removes, blurs or replaces your webcam background, grades colour, retouches
+and auto-frames you, then offers the result to other applications as a virtual
+camera. Every per-frame operation runs on the GPU through PyTorch on ROCm.
+.PP
+The GPU runtime is not part of this package. Run
+.BR aicampro-setup (1)
+once before the first launch.
+.SH OPTIONS
+.TP
+.B \-\-check
+Report the compute device, the matting models found, and every camera and
+virtual camera on the system, then exit. This is the first thing to run when
+something does not work.
+.TP
+.B \-\-list\-devices
+List cameras and v4l2loopback devices, marking which of the latter actually
+accept a video stream, then exit.
+.TP
+.BI \-\-device " PATH"
+Use this camera instead of the one stored in the configuration, for example
+.IR /dev/video0 .
+.TP
+.BI \-\-config " PATH"
+Read settings from this file instead of the default.
+.SH KEYBOARD SHORTCUTS
+.TP
+.B Ctrl+B
+Toggle the virtual camera output.
+.TP
+.B Ctrl+R
+Start or stop recording.
+.TP
+.B Ctrl+S
+Save a snapshot.
+.TP
+.B Ctrl+Q
+Quit.
+.SH ENVIRONMENT
+.TP
+.B AICAMPRO_PYTHON
+Interpreter to run the application with, overriding the managed environment.
+.TP
+.B AICAMPRO_MODEL_DIR
+Directory holding the matting models. Defaults to
+.IR $XDG_DATA_HOME/aicampro/models .
+.SH FILES
+.TP
+.I ~/.config/aicampro/config.json
+Settings, written on exit.
+.TP
+.I ~/.config/aicampro/presets/
+Saved presets.
+.TP
+.I ~/.local/share/aicampro/venv/
+The GPU runtime created by
+.BR aicampro-setup (1).
+.SH EXIT STATUS
+Returns 0 on a clean exit, non-zero if the runtime is missing or the camera
+cannot be opened.
+.SH SEE ALSO
+.BR aicampro-setup (1),
+.BR v4l2loopback-ctl (1)
+.PP
+Full documentation at
+.UR https://github.com/hashcott/AICamPro
+.UE
+.SH AUTHOR
+Harry Nguyen <duchanhstyle@gmail.com>

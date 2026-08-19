@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=AICamPro
+GenericName=AI Webcam
+Comment=Remove or replace your webcam background, grade colour and auto-frame, on an AMD GPU
+Comment[vi]=Xoá hoặc thay nền webcam, chỉnh màu và tự bám khung, chạy trên GPU AMD
+Exec=aicampro
+Icon=aicampro
+Terminal=false
+Categories=AudioVideo;Video;Recorder;
+Keywords=webcam;camera;background;virtual camera;green screen;ROCm;
+Keywords[vi]=webcam;camera;nen;xoa nen;webcam ao;phong xanh;
+StartupWMClass=aicampro

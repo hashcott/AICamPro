@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Không dùng clipPath: trình vẽ SVG của Qt (SVG Tiny) bỏ qua nó, hình sẽ
+       tràn ra ngoài. Mọi hình đều được dựng sao cho tự nằm gọn trong ống kính. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#242936"/>
+      <stop offset="1" stop-color="#13151a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#ff8f6a"/>
+      <stop offset="1" stop-color="#e04529"/>
+    </linearGradient>
+  </defs>
+
+  <!-- thân máy -->
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#bg)"/>
+  <rect x="8.5" y="8.5" width="239" height="239" rx="53.5" fill="none"
+        stroke="#333a49" stroke-width="1"/>
+
+  <!-- lòng ống kính -->
+  <circle cx="128" cy="128" r="74" fill="#0d0f13"/>
+
+  <!-- hậu cảnh nhoè phía sau chủ thể -->
+  <circle cx="95"  cy="92"  r="16" fill="#20242e"/>
+  <circle cx="167" cy="101" r="13" fill="#20242e"/>
+  <circle cx="76"  cy="140" r="10" fill="#1b1f27"/>
+
+  <!-- chủ thể đã tách khỏi nền -->
+  <path d="M63.9 165 A 74 74 0 0 0 192.1 165 C 180 129 76 129 63.9 165 Z"
+        fill="url(#accent)"/>
+  <circle cx="128" cy="106" r="27" fill="url(#accent)"/>
+
+  <!-- vành ống kính, hở một đoạn như khẩu độ đang mở -->
+  <circle cx="128" cy="128" r="86" fill="none" stroke="#2c313d" stroke-width="9"/>
+  <circle cx="128" cy="128" r="86" fill="none" stroke="url(#accent)" stroke-width="9"
+          stroke-linecap="round" stroke-dasharray="352 188"
+          transform="rotate(-125 128 128)"/>
+</svg>

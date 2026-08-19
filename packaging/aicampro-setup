@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# Dựng môi trường chạy cho AICamPro.
+#
+# Gói .deb và AppImage chỉ mang phần ứng dụng. PyTorch bản ROCm chiếm 14 GB
+# sau khi cài (13 GB trong đó là thư viện ROCm nhúng sẵn trong wheel), và phải
+# khớp với driver amdgpu trên máy — nên nó được tải một lần vào môi trường
+# riêng của người dùng thay vì nhồi vào gói.
+set -euo pipefail
+
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/aicampro"
+VENV="$DATA_DIR/venv"
+RUNTIME="$DATA_DIR/runtime"
+ROCM_CHANNEL="${ROCM_CHANNEL:-rocm6.4}"
+# Python dùng để tạo venv. AppImage truyền vào interpreter của chính nó để
+# torch được biên dịch đúng ABI với Python đang chạy ứng dụng.
+BOOTSTRAP_PYTHON="${AICAMPRO_BOOTSTRAP_PYTHON:-python3}"
+# --minimal: chế độ cho AppImage — chỉ cài PyTorch và model vì Qt/OpenCV/numpy
+# đã nằm sẵn trong AppImage.
+#
+# Chế độ này KHÔNG dùng venv. Python của AppImage sống ở điểm mount tạm
+# (/tmp/.mount_XXXX) đổi mỗi lần chạy, nên venv tạo từ nó có symlink và
+# pyvenv.cfg trỏ vào đường dẫn biến mất ngay khi AppImage thoát. Thay vào đó
+# cài thẳng vào một thư mục bằng `pip install --target` rồi ghép vào
+# PYTHONPATH — không interpreter nào phải trỏ đi đâu cả.
+MINIMAL=0
+[[ "${1:-}" == "--minimal" ]] && MINIMAL=1
+
+say() { printf '\n\033[1m→ %s\033[0m\n' "$*"; }
+die() { printf '\033[31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
+
+command -v "$BOOTSTRAP_PYTHON" >/dev/null || die "Không tìm thấy $BOOTSTRAP_PYTHON"
+
+say "Kiểm tra GPU"
+if [[ -r /sys/class/drm ]] && ! grep -qs 0x1002 /sys/class/drm/renderD*/device/vendor; then
+  echo "  ⚠ Không thấy GPU AMD. AICamPro vẫn chạy được trên CPU nhưng rất chậm."
+fi
+if ! id -nG | tr ' ' '\n' | grep -qx render; then
+  echo "  ⚠ Bạn chưa ở trong nhóm 'render'. ROCm sẽ không thấy card."
+  echo "    Sửa:  sudo usermod -aG video,render \"\$USER\"   rồi đăng xuất/đăng nhập lại"
+fi
+
+mkdir -p "$DATA_DIR"
+PIP_TARGET=()
+if [[ $MINIMAL -eq 1 ]]; then
+  say "Cài vào $RUNTIME (không dùng venv — xem ghi chú đầu file)"
+  PY="$BOOTSTRAP_PYTHON"
+  PIP_TARGET=(--target "$RUNTIME" --upgrade)
+  export PYTHONPATH="$RUNTIME${PYTHONPATH:+:$PYTHONPATH}"
+else
+  say "Tạo môi trường tại $VENV"
+  [[ -d "$VENV" ]] || "$BOOTSTRAP_PYTHON" -m venv "$VENV"
+  PY="$VENV/bin/python"
+  "$PY" -m pip install --quiet --upgrade pip
+fi
+
+if "$PY" -c 'import torch' 2>/dev/null; then
+  say "PyTorch đã có: $("$PY" -c 'import torch; print(torch.__version__)')"
+else
+  say "Cài PyTorch ROCm ($ROCM_CHANNEL) — khoảng 3 GB tải về, 14 GB sau khi cài"
+  "$PY" -m pip install "${PIP_TARGET[@]}" torch torchvision \
+    --index-url "https://download.pytorch.org/whl/$ROCM_CHANNEL"
+fi
+
+if [[ $MINIMAL -eq 0 ]]; then
+  say "Cài phần còn lại"
+  "$PY" -m pip install --quiet --upgrade \
+    "PySide6-Essentials>=6.6" "opencv-python-headless>=4.9" "numpy>=1.26" "pyvirtualcam>=0.11"
+else
+  say "Bỏ qua Qt/OpenCV/numpy (AppImage đã mang sẵn)"
+fi
+
+say "Tải model tách nền"
+export AICAMPRO_MODEL_DIR="${AICAMPRO_MODEL_DIR:-$DATA_DIR/models}"
+if [[ -x "${AICAMPRO_SCRIPTS:-}/download_models.sh" ]]; then
+  "${AICAMPRO_SCRIPTS}/download_models.sh"
+else
+  mkdir -p "$AICAMPRO_MODEL_DIR"
+  base="https://github.com/PeterL1n/RobustVideoMatting/releases/download/v1.0.0"
+  for m in rvm_mobilenetv3_fp32.torchscript rvm_mobilenetv3_fp16.torchscript; do
+    [[ -s "$AICAMPRO_MODEL_DIR/$m" ]] && { echo "  ✓ đã có $m"; continue; }
+    echo "  ↓ $m"
+    curl -fL --retry 3 --progress-bar -o "$AICAMPRO_MODEL_DIR/$m" "$base/$m"
+  done
+  yunet="$AICAMPRO_MODEL_DIR/face_detection_yunet_2023mar.onnx"
+  if [[ ! -s "$yunet" ]]; then
+    echo "  ↓ face_detection_yunet_2023mar.onnx"
+    curl -fL --retry 3 --progress-bar -o "$yunet" \
+      "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx" \
+      || { rm -f "$yunet"; echo "  ⚠ bỏ qua YuNet"; }
+  fi
+fi
+
+say "Kiểm tra lại"
+"$PY" - <<'PYEOF'
+import torch
+print("  torch:", torch.__version__, "| HIP:", torch.version.hip)
+if torch.cuda.is_available():
+    p = torch.cuda.get_device_properties(0)
+    print(f"  GPU  : {p.name} ({getattr(p, 'gcnArchName', '')}), {p.total_memory / 1024**3:.1f} GB")
+else:
+    print("  ⚠ Không thấy GPU — sẽ chạy trên CPU")
+PYEOF
+
+printf '\n\033[32m✓ Xong. Khởi chạy bằng: aicampro\033[0m\n'
