@@ -134,7 +134,10 @@ def _merge(obj: Any, data: dict) -> None:
             _merge(current, value)
         elif isinstance(current, tuple) and isinstance(value, (list, tuple)):
             setattr(obj, key, tuple(value))
-        elif value is None:
+        elif value is None or isinstance(value, (dict, list, tuple)):
+            # kiểu phức hợp không hợp với trường vô hướng; bỏ qua thay vì ép kiểu.
+            # `str({...})` luôn thành công nên nếu không chặn ở đây, một object
+            # lọt vào trường chuỗi sẽ biến thành rác mà không ai hay.
             continue
         else:
             with contextlib.suppress(TypeError, ValueError):
