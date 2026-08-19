@@ -1,18 +1,50 @@
 [project]
 name = "aicampro"
 version = "0.1.0"
-description = "Webcam AI cho Linux: xoá/thay nền, filter màu, làm đẹp, auto-framing — tăng tốc bằng GPU AMD qua ROCm"
+description = "AI webcam for Linux — background removal, colour grading and auto-framing, accelerated on AMD GPUs through ROCm"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
+authors = [{ name = "Harry Nguyen", email = "duchanhstyle@gmail.com" }]
+keywords = [
+    "webcam", "virtual-camera", "background-removal", "matting",
+    "rocm", "amd", "gpu", "v4l2", "linux", "pyside6",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: GPU",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Video :: Capture",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
 dependencies = [
-    "torch>=2.5",          # cài từ index ROCm, xem scripts/setup_env.sh
+    # torch/torchvision come from the ROCm wheel index, not PyPI.
+    # See scripts/setup_env.sh -- installing these from PyPI gives you a
+    # CPU-only (or CUDA) build that will not use an AMD GPU.
+    "torch>=2.5",
     "torchvision>=0.20",
     "PySide6>=6.6",
     "opencv-python-headless>=4.9",
     "numpy>=1.26",
     "pyvirtualcam>=0.11",
 ]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.urls]
+Homepage = "https://github.com/hashcott/AICamPro"
+Repository = "https://github.com/hashcott/AICamPro"
+Issues = "https://github.com/hashcott/AICamPro/issues"
+Changelog = "https://github.com/hashcott/AICamPro/blob/main/CHANGELOG.md"
 
 [project.scripts]
 aicampro = "aicampro.__main__:main"
