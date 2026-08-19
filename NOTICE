@@ -1,0 +1,21 @@
+AICamPro
+Copyright (c) 2026 Harry Nguyen
+
+This product is licensed under the MIT License (see LICENSE).
+
+Third-party models
+------------------
+AICamPro does not bundle any model weights. `scripts/download_models.sh`
+fetches them at install time from their original sources, and each keeps the
+licence of its own project:
+
+  RobustVideoMatting (rvm_*.torchscript)
+    https://github.com/PeterL1n/RobustVideoMatting
+    GPL-3.0
+
+  YuNet face detector (face_detection_yunet_2023mar.onnx)
+    https://github.com/opencv/opencv_zoo
+    Apache-2.0
+
+If you redistribute AICamPro together with these weights, the terms of those
+licences apply to your distribution.
