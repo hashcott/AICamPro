@@ -10,8 +10,8 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
-LUT_DIR = ROOT / "assets" / "luts"
-BG_DIR = ROOT / "assets" / "backgrounds"
+LUT_DIR = ROOT / "aicampro" / "assets" / "luts"
+BG_DIR = ROOT / "aicampro" / "assets" / "backgrounds"
 SIZE = 17
 
 

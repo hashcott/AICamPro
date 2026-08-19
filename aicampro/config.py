@@ -11,9 +11,11 @@ from typing import Any
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "aicampro"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 PRESET_DIR = CONFIG_DIR / "presets"
-REPO_ROOT = Path(__file__).resolve().parent.parent
+PACKAGE_DIR = Path(__file__).resolve().parent
+REPO_ROOT = PACKAGE_DIR.parent
+# assets nằm TRONG gói để wheel mang theo được; model tải riêng nên ở ngoài
+ASSET_DIR = PACKAGE_DIR / "assets"
 MODEL_DIR = REPO_ROOT / "models"
-ASSET_DIR = REPO_ROOT / "assets"
 
 
 @dataclass
@@ -107,7 +109,7 @@ class AppConfig:
         return path
 
     @classmethod
-    def load(cls, path: Path | None = None) -> "AppConfig":
+    def load(cls, path: Path | None = None) -> AppConfig:
         path = Path(path) if path else CONFIG_FILE
         cfg = cls()
         if path.exists():
@@ -151,7 +153,7 @@ def resolve_asset(path: str) -> Path | None:
     p = Path(path).expanduser()
     if p.is_absolute():
         return p if p.exists() else None
-    for base in (Path.cwd(), REPO_ROOT):
+    for base in (Path.cwd(), REPO_ROOT, PACKAGE_DIR):
         candidate = (base / p).resolve()
         if candidate.exists():
             return candidate
