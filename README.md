@@ -1,175 +1,195 @@
 # AICamPro
 
-Webcam AI cho Linux, tăng tốc bằng **GPU AMD qua ROCm**: xoá / làm mờ / thay nền,
-bộ lọc màu và làm đẹp, tự động bám chủ thể, xuất ra **webcam ảo** dùng được trong
-Google Meet, Zoom, Discord, OBS…
+AI webcam for Linux — background removal, colour grading, retouching and
+auto-framing, running on an **AMD GPU through ROCm**, and exposed to Meet, Zoom,
+Discord or OBS as a virtual camera.
 
-Toàn bộ khâu xử lý ảnh chạy trên GPU bằng PyTorch — CPU chỉ lo đọc camera và giao diện.
+[![CI](https://github.com/hashcott/AICamPro/actions/workflows/ci.yml/badge.svg)](https://github.com/hashcott/AICamPro/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![Platform: Linux](https://img.shields.io/badge/platform-Linux-lightgrey.svg)](#requirements)
 
----
-
-## Hiệu năng đo trên máy này
-
-RX 7900 XT (gfx1100) · torch 2.9.1+rocm6.4 · nguồn 1280×720:
-
-| Chế độ | Thời gian / khung | Tương đương |
-|---|---|---|
-| Chỉ tách nền (RVM mobilenetv3) | 3.8 ms | ~265 fps |
-| Làm mờ nền | 5.1 ms | ~198 fps |
-| Thay ảnh nền | 4.8 ms | ~210 fps |
-| Nền + màu + làm đẹp + vignette | 8.0 ms | ~124 fps |
-| Tách nền ở 1920×1080 | 3.9 ms | ~257 fps |
-
-VRAM dùng: **~55 MB**. Nói cách khác card còn dư rất nhiều tài nguyên —
-nút cổ chai là chính cái webcam (30 fps), không phải GPU.
+*[Tiếng Việt](README.vi.md)*
 
 ---
 
-## Cài đặt
+## Why
+
+Background removal for webcams is well served on Windows and on NVIDIA
+hardware. On Linux with a Radeon card the usual answers are a CUDA-only tool, a
+proprietary Windows app, or an OBS filter that runs the segmentation on the CPU
+and costs you a core.
+
+AICamPro targets that gap directly: PyTorch on ROCm, a recurrent matting model,
+and every compositing and filtering step as a GPU tensor operation. The whole
+per-frame chain lands in single-digit milliseconds on an RX 7900 XT, which
+leaves the GPU almost entirely free for whatever else you are doing.
+
+## Features
+
+**Background** — bokeh blur, image replacement, solid colour, virtual green
+screen, or a transparent mode that writes real alpha into PNG snapshots. Edge
+controls for feathering, growing or shrinking the subject, and hardening the
+matte, for when hair gets eaten or a halo of the old background shows through.
+
+**Colour** — exposure, contrast, saturation, temperature, tint, gamma, and 3D
+`.cube` LUTs. Six LUTs ship with the project; drop any `.cube` file into
+`aicampro/assets/luts/` and it appears in the list.
+
+**Retouching** — edge-preserving skin smoothing that can be limited to skin
+tones, sharpening, and vignette.
+
+**Framing** — auto-framing that follows the AI matte, or a detected face when
+matting is off. The crop always keeps the output aspect ratio, so the image is
+never stretched. Capture at 1080p and output 720p and the crop uses real pixels
+instead of upscaling.
+
+**Output** — virtual camera through v4l2loopback, recording through ffmpeg with
+VAAPI hardware encoding on the same AMD card, and stills. Presets store the
+whole look.
+
+**Camera** — exposure, gain, white balance and backlight compensation read
+straight from V4L2, so only the controls your camera actually supports are
+shown. UVC cameras keep these settings on the device itself, so there is always
+a way back to the defaults.
+
+## Performance
+
+Measured on a Radeon RX 7900 XT (gfx1100), torch 2.9.1+rocm6.4, 1280×720 input:
+
+| Stage | Per frame | Equivalent |
+| --- | ---: | ---: |
+| Matting only (RVM MobileNetV3) | 3.8 ms | 265 fps |
+| \+ background blur | 5.1 ms | 198 fps |
+| \+ image background | 4.8 ms | 210 fps |
+| \+ colour, retouching, vignette | 8.0 ms | 124 fps |
+| Matting at 1920×1080 | 3.9 ms | 257 fps |
+
+Peak VRAM: **~55 MB**. In practice the webcam is the bottleneck, not the GPU.
+
+## Requirements
+
+- Linux with the `amdgpu` driver and an AMD GPU that ROCm supports (RDNA 2 or
+  newer). It falls back to the CPU, but only fast enough to prove it runs.
+- Python 3.10 or newer, and `conda` for the setup script.
+- Your user in the `video` and `render` groups:
+  ```bash
+  id                                     # check
+  sudo usermod -aG video,render "$USER"  # then log out and back in
+  ```
+- `ffmpeg` for recording and `v4l2loopback-dkms` for the virtual camera.
+
+## Install
 
 ```bash
-# 1. Môi trường conda + PyTorch ROCm
-./scripts/setup_env.sh
+git clone https://github.com/hashcott/AICamPro.git
+cd AICamPro
 
-# 2. Model tách nền (~23 MB; thêm "all" để lấy cả bản resnet50 chất lượng cao hơn)
-./scripts/download_models.sh
+./scripts/setup_env.sh              # conda env "aicampro" + PyTorch ROCm
+./scripts/download_models.sh        # ~23 MB; add "all" for the ResNet50 variants
+sudo ./scripts/setup_v4l2loopback.sh  # virtual camera device, once
 
-# 3. Thiết bị webcam ảo (một lần duy nhất, cần sudo)
-sudo ./scripts/setup_v4l2loopback.sh
-
-# 4. Chạy
 ./run.sh
 ```
 
-Kiểm tra nhanh trước khi chạy:
+`setup_env.sh` prints the GPU that torch can actually see. If that line says
+CPU, ROCm is not reaching the card and nothing downstream will work.
+
+Model weights are not vendored — they carry their own licences, listed in
+[`NOTICE`](NOTICE).
+
+## Usage
 
 ```bash
-./run.sh --check          # GPU, model, camera, webcam ảo
-./run.sh --list-devices   # chỉ liệt kê thiết bị
+./run.sh                  # the app
+./run.sh --check          # GPU, models, cameras, virtual cameras
+./run.sh --list-devices   # devices only, marking which accept writes
 ```
 
-### Yêu cầu
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl+B` | Toggle the virtual camera |
+| `Ctrl+R` | Start / stop recording |
+| `Ctrl+S` | Take a snapshot |
+| `Ctrl+Q` | Quit |
 
-- GPU AMD được ROCm hỗ trợ (RDNA2/RDNA3 trở lên) + driver `amdgpu`
-- Người dùng thuộc nhóm `video` và `render` — kiểm tra bằng `id`;
-  nếu thiếu: `sudo usermod -aG video,render $USER` rồi đăng xuất/đăng nhập lại
-- `ffmpeg` (để ghi hình) và `v4l2loopback-dkms` (webcam ảo)
+Settings live in `~/.config/aicampro/config.json`, presets in
+`~/.config/aicampro/presets/`.
 
-Không có GPU AMD? Ứng dụng vẫn chạy trên CPU nhưng chậm hơn nhiều — chỉ hợp để thử.
+## Troubleshooting
 
----
+**The picture is very dark.** UVC cameras store exposure on the device, and a
+manual exposure set by any other program persists across reboots. Open
+**Camera (hardware)** in the panel and turn **Auto exposure** back on, or use
+**Reset camera defaults**.
 
-## Tính năng
+**No virtual camera in Meet / OBS.** Run `./run.sh --list-devices`; it marks
+which loopback devices actually accept writes. A device created with
+`exclusive_caps=1` can end up advertising neither capture nor output, at which
+point nothing — not even ffmpeg — can write to it.
+`scripts/setup_v4l2loopback.sh` handles that, merges in the devices other apps
+already registered, and verifies by writing a real frame before reporting
+success.
 
-**Nền** — làm mờ kiểu bokeh, thay bằng ảnh, màu đặc, phông xanh ảo, hoặc nền
-trong suốt (xuất PNG có alpha khi chụp ảnh). Có thanh tinh chỉnh biên: làm mềm,
-co/nở vùng người, tăng độ dứt khoát — hữu ích khi tóc bị ăn mất hoặc lộ viền nền cũ.
+**Auto-framing looks soft.** Cropping and upscaling costs more sharpness than
+anything else in the pipeline: a 1.5× zoom at 720p drops the measured Laplacian
+variance from 328 to 62. Set the capture resolution higher than the output
+resolution (1080p in, 720p out) so the crop has real pixels to work with.
 
-**Màu sắc** — phơi sáng, tương phản, bão hoà, nhiệt màu, sắc độ, gamma, cùng
-LUT 3D `.cube` (kèm sẵn 6 preset trong `assets/luts/`). Thả file `.cube` bất kỳ
-vào thư mục đó là dùng được.
+**`--check` reports a CPU device.** ROCm is not seeing the card. Confirm
+`rocminfo` lists your GPU and that you are in the `render` group.
 
-**Làm đẹp** — làm mịn da giữ biên (chỉ áp lên vùng da nếu muốn), tăng nét, vignette.
+## How it works
 
-**Khung hình** — tự động bám chủ thể, cắt và phóng theo người trong ảnh. Bám theo
-mặt nạ AI (chính xác nhất) hoặc theo khuôn mặt qua YuNet/Haar khi tắt tách nền.
-Khung cắt luôn giữ đúng tỉ lệ đầu ra nên ảnh không bị méo. Muốn bám khung mà không
-mất nét thì đặt **Độ phân giải xuất** (mục Đầu ra) thấp hơn độ phân giải nguồn —
-ví dụ quay 1080p, xuất 720p: lúc đó khung cắt vẫn còn đủ điểm ảnh thật.
-
-**Camera (phần cứng)** — phơi sáng tự động/thủ công, thời gian phơi sáng, gain,
-độ sáng, cân bằng trắng, bù ngược sáng… đọc thẳng từ V4L2 nên chỉ hiện những thứ
-camera thực sự hỗ trợ. Có nút đặt lại mặc định.
-
-**Đầu ra** — webcam ảo qua v4l2loopback, ghi video (ưu tiên mã hoá phần cứng
-VAAPI trên chính card AMD), chụp ảnh. Preset lưu/nạp được toàn bộ thiết lập.
-
-### Phím tắt
-
-| Phím | Tác dụng |
-|---|---|
-| `Ctrl+B` | Bật/tắt webcam ảo |
-| `Ctrl+R` | Bắt đầu / dừng ghi hình |
-| `Ctrl+S` | Chụp ảnh |
-| `Ctrl+Q` | Thoát |
-
----
-
-## Test
-
-```bash
-python -m pytest tests/      # cần GPU, ~8 giây
+```
+camera → BGR frame (CPU) → GPU tensor → matting → composite → auto-frame
+       → colour → retouching → one transfer back to the CPU
+       → preview + virtual camera + recording
 ```
 
-`tests/test_config_wiring.py` bắt buộc mỗi thiết lập trong `AppConfig` phải thực sự
-làm đổi khung hình ra. Thêm thiết lập mới nhớ thêm một dòng vào `CASES`.
+Three threads: one reads the camera and only ever keeps the newest frame, one
+owns every GPU object and runs the chain, and Qt draws. There is exactly one
+GPU-to-CPU transfer per frame; the preview, the virtual camera and the recorder
+all share that array.
 
-## Kiến trúc
+Matting uses [RobustVideoMatting](https://github.com/PeterL1n/RobustVideoMatting),
+a recurrent network, so the alpha stays stable over time instead of flickering
+the way per-frame models do.
 
 ```
 aicampro/
-├── core/
-│   ├── v4l2.py        truy vấn thiết bị qua ioctl (không cần v4l-utils)
-│   ├── capture.py     luồng đọc camera, luôn giữ khung mới nhất
-│   ├── pipeline.py    luồng xử lý chính (QThread) — điều phối toàn bộ
-│   ├── vcam.py        xuất ra v4l2loopback
-│   └── recorder.py    ghi video qua ffmpeg + chụp ảnh
-├── gpu/               mọi thứ chạy trên GPU, tensor (1,3,H,W) RGB 0..1
-│   ├── device.py      dò GPU ROCm
-│   ├── ops.py         blur, dilate/erode, mặt nạ da, resize…
-│   ├── segmentation.py RobustVideoMatting (TorchScript) + hậu xử lý alpha
-│   ├── compose.py     ghép chủ thể lên nền mới
-│   ├── filters.py     màu + làm đẹp
-│   └── lut.py         nạp/áp LUT .cube bằng grid_sample 3D
-├── vision/autoframe.py bám chủ thể (mặt nạ hoặc khuôn mặt)
-└── ui/                PySide6: preview, bảng điều khiển, theme tối
+├── core/       capture, V4L2, pipeline, virtual camera, recording
+├── gpu/        matting, compositing, filters, LUTs   (1,3,H,W) RGB 0..1
+├── vision/     auto-framing
+└── ui/         PySide6 widgets and main window
 ```
 
-Luồng dữ liệu một khung hình:
+[`CLAUDE.md`](CLAUDE.md) holds the architecture notes and the list of traps that
+already cost debugging time.
 
+## Development
+
+```bash
+python -m pytest              # GPU tests skip themselves without a GPU
+ruff check aicampro tests
+python scripts/make_assets.py # regenerate the sample LUTs and backgrounds
 ```
-camera → BGR (CPU) → tensor GPU → tách nền → ghép nền → auto-frame
-       → filter màu → làm đẹp → về CPU một lần duy nhất
-       → preview + webcam ảo + ghi hình
-```
 
-Chỉ có **một** lần chuyển dữ liệu GPU→CPU cho mỗi khung; preview, webcam ảo và
-file ghi đều dùng chung mảng đó.
+`tests/test_config_wiring.py` runs a frame through the real pipeline and
+asserts that **every** field of `AppConfig` changes the output. It exists
+because one setting was once connected to nothing at all and failed silently.
+Adding a config field means adding a line to `CASES`.
 
-Model tách nền là [RobustVideoMatting](https://github.com/PeterL1n/RobustVideoMatting)
-— mạng hồi tiếp, nên alpha ổn định theo thời gian thay vì nhấp nháy như các model
-tách từng khung độc lập. Trạng thái hồi tiếp được reset khi đổi độ phân giải hoặc model.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Cấu hình lưu tại `~/.config/aicampro/config.json`, preset tại `~/.config/aicampro/presets/`.
+## License
 
----
+MIT — see [LICENSE](LICENSE). Model weights are downloaded at install time and
+keep their own licences; see [NOTICE](NOTICE).
 
-## Ghi chú kỹ thuật
+## Acknowledgements
 
-Vài thứ đã đo được trên chính máy này, ghi lại để khỏi phải tìm lại:
-
-- **`CAP_PROP_BUFFERSIZE = 1` làm tụt một nửa fps** với backend V4L2 (30 → 16 fps).
-  Dùng `2`: vẫn giữ độ trễ một khung mà không mất fps.
-- **PySide6 `QComboBox.findData()` so sánh object Python theo identity**, không theo
-  giá trị. Tuple `(1280, 720)` dựng lúc chạy sẽ không khớp với tuple cùng giá trị đã
-  lưu trong combo. `LabeledCombo._select()` tự so sánh bằng `==` để tránh chuyện này.
-- **Webcam ảo của OBS (`exclusive_caps=1`) không nhận ghi từ ứng dụng khác.**
-  Hãy tạo thiết bị riêng cho AICamPro bằng `scripts/setup_v4l2loopback.sh`.
-- **Thiết lập phơi sáng/WB do camera UVC lưu trên chính thiết bị**, không phải trong
-  ứng dụng — đặt phơi sáng thủ công rồi thoát app thì lần sau mở lên hình vẫn tối.
-  AICamPro phát hiện trạng thái này lúc khởi động và cảnh báo.
-- **Quy tắc QSS `QWidget { background: … }` phá giao diện Qt.** Nó áp cho mọi widget
-  con nên QLabel hiện thành ô tối, còn QSlider nuốt kích thước groove/handle. Nền
-  chỉ đặt cho vùng chứa; QLabel và QSlider để `transparent`.
-- **Phóng to là thứ phá chất lượng mạnh nhất trong pipeline.** Đo trên 720p: zoom
-  1.5× làm độ nét (phương sai Laplacian) rớt từ 328 xuống 62 với `bilinear`, còn 90
-  với `bicubic`. Vì vậy khâu phóng dùng `bicubic`, khâu thu nhỏ dùng `area`.
-- **`fgr` mà RVM trả về gần như không làm mềm ảnh** (188.6 so với 193.7 của ảnh gốc
-  trong vùng chủ thể) — dùng nó để ghép cho biên sạch là đáng.
-- **VAAPI ghi hình chạy trên `/dev/dri/renderD*` thuộc card AMD** — số hiệu node
-  không cố định, `recorder.py` dò theo `vendor == 0x1002`.
-
-## Bản quyền
-
-Mã nguồn: MIT. Model RobustVideoMatting theo giấy phép GPL-3.0 của dự án gốc;
-YuNet theo giấy phép của OpenCV Zoo. Cả hai được tải lúc cài đặt, không kèm trong repo.
+- [RobustVideoMatting](https://github.com/PeterL1n/RobustVideoMatting) — the matting model
+- [OpenCV Zoo](https://github.com/opencv/opencv_zoo) — the YuNet face detector
+- [v4l2loopback](https://github.com/umlaeute/v4l2loopback) — the virtual camera device
+- [pyvirtualcam](https://github.com/letmaik/pyvirtualcam) — virtual camera output
