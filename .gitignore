@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# model tải về (dùng scripts/download_models.sh)
+models/*.torchscript
+models/*.onnx
+models/*.pth
+
+# đầu ra
+*.mp4
+*.mkv
+snapshots/
