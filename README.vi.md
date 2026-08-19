@@ -29,18 +29,49 @@ nút cổ chai là chính cái webcam (30 fps), không phải GPU.
 
 ## Cài đặt
 
+Không bản nào kèm sẵn PyTorch. Bản ROCm chiếm khoảng **14 GB sau khi cài** — 13 GB
+trong đó là thư viện ROCm nằm trong wheel — và phải khớp driver amdgpu trên máy,
+nên mọi cách cài đều tải nó một lần vào `~/.local/share/aicampro/`.
+
+### AppImage — chạy trên mọi bản phân phối
+
 ```bash
-# 1. Môi trường conda + PyTorch ROCm
-./scripts/setup_env.sh
+curl -LO https://github.com/hashcott/AICamPro/releases/latest/download/AICamPro-0.1.0-x86_64.AppImage
+chmod +x AICamPro-*.AppImage
+./AICamPro-*.AppImage --setup     # một lần: PyTorch ROCm + model
+./AICamPro-*.AppImage
+```
 
-# 2. Model tách nền (~23 MB; thêm "all" để lấy cả bản resnet50 chất lượng cao hơn)
-./scripts/download_models.sh
+Đã mang sẵn Python, Qt, OpenCV, numpy bên trong.
 
-# 3. Thiết bị webcam ảo (một lần duy nhất, cần sudo)
-sudo ./scripts/setup_v4l2loopback.sh
+### Debian / Ubuntu / Mint
 
-# 4. Chạy
+```bash
+curl -LO https://github.com/hashcott/AICamPro/releases/latest/download/aicampro_0.1.0_all.deb
+sudo apt install ./aicampro_0.1.0_all.deb
+aicampro-setup                    # một lần: PyTorch ROCm + Qt + model
+aicampro
+```
+
+Có sẵn biểu tượng trong menu ứng dụng và trang man `aicampro(1)`.
+
+### Từ mã nguồn
+
+```bash
+git clone https://github.com/hashcott/AICamPro.git
+cd AICamPro
+./scripts/setup_env.sh              # env conda "aicampro" + PyTorch ROCm
+./scripts/download_models.sh        # ~23 MB; thêm "all" để lấy cả bản resnet50
 ./run.sh
+```
+
+### Webcam ảo
+
+Cần bước này thì Meet/Zoom/Discord/OBS mới thấy AICamPro. Chạy một lần:
+
+```bash
+sudo ./scripts/setup_v4l2loopback.sh                    # bản clone
+sudo /usr/lib/aicampro/scripts/setup_v4l2loopback.sh    # bản .deb
 ```
 
 Kiểm tra nhanh trước khi chạy:

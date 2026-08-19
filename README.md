@@ -81,19 +81,56 @@ Peak VRAM: **~55 MB**. In practice the webcam is the bottleneck, not the GPU.
 
 ## Install
 
+Nothing here bundles PyTorch. The ROCm build is about **14 GB installed** — 13 GB
+of that being the ROCm libraries inside the wheel — and it has to match the
+amdgpu driver on your machine, so every install path fetches it once into
+`~/.local/share/aicampro/`.
+
+### AppImage
+
+```bash
+curl -LO https://github.com/hashcott/AICamPro/releases/latest/download/AICamPro-0.1.0-x86_64.AppImage
+chmod +x AICamPro-*.AppImage
+./AICamPro-*.AppImage --setup     # once: PyTorch ROCm + models
+./AICamPro-*.AppImage
+```
+
+Carries its own Python, Qt, OpenCV and numpy, so it runs on any distribution.
+
+### Debian, Ubuntu, Mint
+
+```bash
+curl -LO https://github.com/hashcott/AICamPro/releases/latest/download/aicampro_0.1.0_all.deb
+sudo apt install ./aicampro_0.1.0_all.deb
+aicampro-setup                    # once: PyTorch ROCm + Qt + models
+aicampro
+```
+
+Installs a desktop entry and icons, and `aicampro(1)` / `aicampro-setup(1)` man
+pages.
+
+### From source
+
 ```bash
 git clone https://github.com/hashcott/AICamPro.git
 cd AICamPro
-
 ./scripts/setup_env.sh              # conda env "aicampro" + PyTorch ROCm
 ./scripts/download_models.sh        # ~23 MB; add "all" for the ResNet50 variants
-sudo ./scripts/setup_v4l2loopback.sh  # virtual camera device, once
-
 ./run.sh
 ```
 
 `setup_env.sh` prints the GPU that torch can actually see. If that line says
 CPU, ROCm is not reaching the card and nothing downstream will work.
+
+### Virtual camera
+
+Needed for Meet, Zoom, Discord and OBS to see AICamPro. Once, on any install
+path:
+
+```bash
+sudo ./scripts/setup_v4l2loopback.sh          # from a clone
+sudo /usr/lib/aicampro/scripts/setup_v4l2loopback.sh   # from the .deb
+```
 
 Model weights are not vendored — they carry their own licences, listed in
 [`NOTICE`](NOTICE).
