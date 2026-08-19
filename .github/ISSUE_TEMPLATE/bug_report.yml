@@ -1,0 +1,64 @@
+name: Bug report
+description: Something does not work as documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Most reports come down to the GPU stack or a V4L2 device, so the
+        `aicampro --check` output below usually answers half the questions.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got instead.
+      placeholder: |
+        1. Set Background mode to "Replace with image"
+        2. Picked assets/backgrounds/02_sunset_gradient.jpg
+        3. Expected the gradient behind me; got a flat dark grey instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: check-output
+    attributes:
+      label: Output of `./run.sh --check`
+      description: Paste it verbatim. It reports the GPU, the models and every camera.
+      render: text
+    validations:
+      required: true
+
+  - type: input
+    id: distro
+    attributes:
+      label: Distribution and kernel
+      placeholder: "Linux Mint 22, kernel 6.8.0-138-generic"
+    validations:
+      required: true
+
+  - type: input
+    id: rocm
+    attributes:
+      label: ROCm and PyTorch version
+      description: "`python -c 'import torch; print(torch.__version__, torch.version.hip)'`"
+      placeholder: "2.9.1+rocm6.4 / 6.4.43484"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Terminal output
+      description: Anything the app printed, especially a traceback.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I ran `./scripts/download_models.sh` and `--check` lists a matting model
+          required: true
+        - label: My user is in the `video` and `render` groups (`id`)
+          required: true
