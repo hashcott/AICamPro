@@ -3,12 +3,20 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from PySide6.QtCore import (Property, QEasingCurve, QPropertyAnimation, QRectF,
-                            Qt, Signal)
+from PySide6.QtCore import Property, QEasingCurve, QPropertyAnimation, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QPainter
-from PySide6.QtWidgets import (QAbstractButton, QColorDialog, QComboBox, QFrame,
-                               QHBoxLayout, QLabel, QPushButton, QSlider,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QAbstractButton,
+    QColorDialog,
+    QComboBox,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSlider,
+    QVBoxLayout,
+    QWidget,
+)
 
 from . import style
 
@@ -38,10 +46,10 @@ class ToggleSwitch(QAbstractButton):
         self._anim.setEasingCurve(QEasingCurve.OutCubic)
         self.toggled.connect(self._animate)
 
-    def getKnobPos(self) -> float:          # noqa: N802 (Qt property)
+    def getKnobPos(self) -> float:
         return self._knob
 
-    def setKnobPos(self, value: float) -> None:      # noqa: N802 (Qt property)
+    def setKnobPos(self, value: float) -> None:
         self._knob = float(value)
         self.update()
 
@@ -53,13 +61,13 @@ class ToggleSwitch(QAbstractButton):
         self._anim.setEndValue(1.0 if checked else 0.0)
         self._anim.start()
 
-    def setChecked(self, checked: bool) -> None:     # noqa: N802 (Qt API)
+    def setChecked(self, checked: bool) -> None:
         super().setChecked(checked)
         if not self._anim.state():
             self._knob = 1.0 if checked else 0.0
             self.update()
 
-    def paintEvent(self, _event) -> None:            # noqa: N802 (Qt API)
+    def paintEvent(self, _event) -> None:
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         r = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
@@ -81,7 +89,7 @@ class NoWheelMixin:
     Chỉ nhận sự kiện wheel khi widget đang được focus (đã bấm vào).
     """
 
-    def wheelEvent(self, event):        # noqa: N802 (Qt API)
+    def wheelEvent(self, event):
         if self.hasFocus():
             super().wheelEvent(event)
         else:
@@ -193,7 +201,7 @@ class SliderRow(QWidget):
 
     def _to_slider(self, v: float) -> int:
         span = self._max - self._min or 1.0
-        return int(round((v - self._min) / span * self._steps))
+        return round((v - self._min) / span * self._steps)
 
     def _from_slider(self, i: int) -> float:
         v = self._min + (i / self._steps) * (self._max - self._min)
@@ -213,7 +221,7 @@ class SliderRow(QWidget):
         self.slider.blockSignals(blocked)
         self.value_label.setText(f"{float(v):.{self._decimals}f}{self._suffix}")
 
-    def bind(self, fn: Callable[[float], None]) -> "SliderRow":
+    def bind(self, fn: Callable[[float], None]) -> SliderRow:
         self.valueChanged.connect(fn)
         return self
 
@@ -243,7 +251,7 @@ class ToggleRow(QWidget):
         self.check.setChecked(bool(v))
         self.check.blockSignals(blocked)
 
-    def bind(self, fn: Callable[[bool], None]) -> "ToggleRow":
+    def bind(self, fn: Callable[[bool], None]) -> ToggleRow:
         self.toggled.connect(fn)
         return self
 
@@ -297,7 +305,7 @@ class LabeledCombo(QWidget):
     def data(self):
         return self.combo.currentData()
 
-    def bind(self, fn) -> "LabeledCombo":
+    def bind(self, fn) -> LabeledCombo:
         self.changed.connect(lambda _: fn(self.data()))
         return self
 

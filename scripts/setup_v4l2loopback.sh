@@ -49,7 +49,7 @@ fi
 # thêm AICamPro nếu chưa có
 already=0
 for i in "${!NRS[@]}"; do
-  [[ "${NRS[$i]}" == "$DEVICE_NR" ]] && { LABELS[$i]="$LABEL"; CAPS[$i]="$EXCLUSIVE"; already=1; }
+  [[ "${NRS[i]}" == "$DEVICE_NR" ]] && { LABELS[i]="$LABEL"; CAPS[i]="$EXCLUSIVE"; already=1; }
 done
 if [[ $already -eq 0 ]]; then
   NRS+=("$DEVICE_NR"); LABELS+=("$LABEL"); CAPS+=("$EXCLUSIVE")
@@ -147,7 +147,7 @@ if [[ "$result" != OUTPUT* ]]; then
   alt=$([[ "$EXCLUSIVE" == "0" ]] && echo 1 || echo 0)
   echo "⚠ /dev/video$DEVICE_NR chưa nhận ghi ($result) — thử lại với exclusive_caps=$alt"
   for i in "${!NRS[@]}"; do
-    [[ "${NRS[$i]}" == "$DEVICE_NR" ]] && CAPS[$i]="$alt"
+    [[ "${NRS[i]}" == "$DEVICE_NR" ]] && CAPS[i]="$alt"
   done
   PARAMS="devices=${#NRS[@]} video_nr=$(join "${NRS[@]}") card_label=\"$(join "${LABELS[@]}")\" exclusive_caps=$(join "${CAPS[@]}")"
   sed -i "s|^options v4l2loopback .*|options v4l2loopback $PARAMS|" "$CONF"

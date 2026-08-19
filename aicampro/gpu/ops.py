@@ -15,7 +15,7 @@ LUMA = (0.299, 0.587, 0.114)
 
 @lru_cache(maxsize=64)
 def _gaussian_kernel(sigma: float, device: str, dtype_str: str) -> torch.Tensor:
-    radius = max(1, int(math.ceil(sigma * 2.5)))
+    radius = max(1, math.ceil(sigma * 2.5))
     xs = torch.arange(-radius, radius + 1, dtype=torch.float32)
     k = torch.exp(-(xs ** 2) / (2 * sigma * sigma))
     k = k / k.sum()
@@ -112,7 +112,7 @@ def resize_cover(img: torch.Tensor, h: int, w: int, fit: str = "cover") -> torch
         return F.interpolate(img, size=(h, w), mode="bilinear", align_corners=False)
     ih, iw = img.shape[-2:]
     scale = max(h / ih, w / iw) if fit == "cover" else min(h / ih, w / iw)
-    nh, nw = max(1, int(round(ih * scale))), max(1, int(round(iw * scale)))
+    nh, nw = max(1, round(ih * scale)), max(1, round(iw * scale))
     out = F.interpolate(img, size=(nh, nw), mode="bilinear", align_corners=False)
     if fit == "cover":
         top, left = (nh - h) // 2, (nw - w) // 2

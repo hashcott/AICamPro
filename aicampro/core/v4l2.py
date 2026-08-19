@@ -7,6 +7,7 @@ import struct
 from dataclasses import dataclass, field
 from pathlib import Path
 
+
 # _IOC(dir, 'V', nr, size) — dir: 2 = _IOR (đọc ra), 3 = _IOWR (ghi vào rồi đọc ra)
 def _ioc(direction: int, nr: int, size: int) -> int:
     return (direction << 30) | (size << 16) | (0x56 << 8) | nr

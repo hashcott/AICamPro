@@ -5,6 +5,7 @@ alpha ổn định theo thời gian, không nhấp nháy như model tách theo t
 """
 from __future__ import annotations
 
+import contextlib
 import threading
 from pathlib import Path
 
@@ -73,10 +74,9 @@ class RVMMatter(Matter):
 
         model = torch.jit.load(str(self.path), map_location=device)
         model.eval()
-        try:
+        # freeze không bắt buộc; một số bản torch từ chối module đã freeze
+        with contextlib.suppress(Exception):
             model = torch.jit.freeze(model)
-        except Exception:
-            pass          # freeze không bắt buộc; một số bản torch từ chối module đã freeze
         self.model = model
 
     # -- helper ---------------------------------------------------------
@@ -131,7 +131,7 @@ def create_matter(model_name: str, device: str, downsample: float = 0.0) -> Matt
 def refine_alpha(pha: torch.Tensor, feather: float, shift: float, contrast: float) -> torch.Tensor:
     """Hậu xử lý alpha: co/nở biên, làm mềm, tăng độ dứt khoát."""
     if abs(shift) > 0.01:
-        radius = max(1, int(round(abs(shift) * 6)))
+        radius = max(1, round(abs(shift) * 6))
         pha = ops.dilate(pha, radius) if shift > 0 else ops.erode(pha, radius)
     if contrast > 0.01:
         # đẩy alpha về 0/1 quanh ngưỡng 0.5

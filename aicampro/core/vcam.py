@@ -1,6 +1,8 @@
 """Xuất stream đã xử lý ra webcam ảo qua v4l2loopback."""
 from __future__ import annotations
 
+import contextlib
+
 import numpy as np
 
 from . import v4l2
@@ -79,10 +81,8 @@ class VirtualCamera:
 
     def close(self) -> None:
         if self._cam is not None:
-            try:
+            with contextlib.suppress(Exception):
                 self._cam.close()
-            except Exception:
-                pass
         self._cam = None
         self._key = None
 

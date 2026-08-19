@@ -53,7 +53,7 @@ class PreviewWidget(QWidget):
         self.update()
 
     # ---------- vẽ ----------
-    def paintEvent(self, event) -> None:      # noqa: N802 (Qt API)
+    def paintEvent(self, event) -> None:
         p = QPainter(self)
         p.setRenderHint(QPainter.SmoothPixmapTransform)
         p.fillRect(self.rect(), QColor("#0e1014"))

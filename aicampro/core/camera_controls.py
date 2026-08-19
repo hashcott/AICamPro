@@ -6,6 +6,7 @@ nguyên sau khi ứng dụng thoát — vì vậy luôn có nút đặt lại m�
 """
 from __future__ import annotations
 
+import contextlib
 import fcntl
 import os
 import struct
@@ -79,13 +80,11 @@ class CameraControls:
 
     def close(self) -> None:
         if self._fd is not None:
-            try:
+            with contextlib.suppress(OSError):
                 os.close(self._fd)
-            except OSError:
-                pass
             self._fd = None
 
-    def __enter__(self) -> "CameraControls":
+    def __enter__(self) -> CameraControls:
         return self
 
     def __exit__(self, *_exc) -> None:

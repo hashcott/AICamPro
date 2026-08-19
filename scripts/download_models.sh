@@ -27,10 +27,15 @@ done
 YUNET="$DIR/face_detection_yunet_2023mar.onnx"
 if [[ ! -s "$YUNET" ]]; then
   echo "↓ tải face_detection_yunet_2023mar.onnx ..."
-  curl -fL --retry 3 --progress-bar -o "$YUNET.part" \
-    "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx" \
-    && mv "$YUNET.part" "$YUNET" || { rm -f "$YUNET.part"; echo "⚠ bỏ qua YuNet (sẽ dùng Haar cascade thay thế)"; }
+  if curl -fL --retry 3 --progress-bar -o "$YUNET.part" \
+      "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
+  then
+    mv "$YUNET.part" "$YUNET"
+  else
+    rm -f "$YUNET.part"
+    echo "⚠ bỏ qua YuNet (auto-framing sẽ dùng Haar cascade thay thế)"
+  fi
 fi
 
 echo
-ls -lh "$DIR" | tail -n +2
+find "$DIR" -maxdepth 1 -type f -printf "  %-42f %8s bytes\n" | sort

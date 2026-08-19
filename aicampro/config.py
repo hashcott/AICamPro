@@ -1,6 +1,7 @@
 """Cấu hình AICamPro: dataclass lồng nhau + lưu/nạp JSON, hỗ trợ preset."""
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
@@ -110,10 +111,9 @@ class AppConfig:
         path = Path(path) if path else CONFIG_FILE
         cfg = cls()
         if path.exists():
-            try:
+            # file hỏng thì dùng mặc định, không để app chết vì cấu hình cũ
+            with contextlib.suppress(json.JSONDecodeError, OSError, TypeError):
                 _merge(cfg, json.loads(path.read_text()))
-            except (json.JSONDecodeError, OSError, TypeError):
-                pass
         return cfg
 
     def apply_dict(self, data: dict) -> None:
@@ -137,10 +137,8 @@ def _merge(obj: Any, data: dict) -> None:
         elif value is None:
             continue
         else:
-            try:
+            with contextlib.suppress(TypeError, ValueError):
                 setattr(obj, key, type(current)(value))
-            except (TypeError, ValueError):
-                pass
 
 
 def resolve_asset(path: str) -> Path | None:

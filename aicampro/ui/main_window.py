@@ -1,18 +1,28 @@
 """Cửa sổ chính AICamPro."""
 from __future__ import annotations
 
+import contextlib
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QCloseEvent, QKeySequence, QShortcut
-from PySide6.QtWidgets import (QFileDialog, QHBoxLayout, QInputDialog, QLabel,
-                               QMainWindow, QMessageBox, QPushButton,
-                               QScrollArea, QSizePolicy, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QFileDialog,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
 
 from .. import config as cfgmod
 from ..config import ASSET_DIR, AppConfig
-from ..core.camera_controls import (EXPOSURE_APERTURE_PRIORITY,
-                                    EXPOSURE_MANUAL, CameraControls)
+from ..core.camera_controls import EXPOSURE_APERTURE_PRIORITY, EXPOSURE_MANUAL, CameraControls
 from ..core.capture import list_cameras
 from ..core.pipeline import Frame, Pipeline, Stats
 from ..core.recorder import available_encoders
@@ -21,8 +31,7 @@ from ..gpu import segmentation as seg
 from ..gpu.lut import builtin_luts
 from . import style
 from .preview import PreviewWidget
-from .widgets import (ColorButton, LabeledCombo, Section, SliderRow, ToggleRow,
-                      separator)
+from .widgets import ColorButton, LabeledCombo, Section, SliderRow, ToggleRow, separator
 
 BG_MODES = [
     ("none", "Giữ nguyên nền"),
@@ -520,8 +529,8 @@ class MainWindow(QMainWindow):
 
         encoders = available_encoders()
         labels = {"vaapi": "VAAPI (GPU AMD)", "x264": "libx264 (CPU)"}
-        self.enc_combo.set_items(["Tự động"] + [labels.get(e, e) for e in encoders],
-                                 ["auto"] + encoders, self.cfg.output.encoder)
+        self.enc_combo.set_items(["Tự động", *[labels.get(e, e) for e in encoders]],
+                                 ["auto", *encoders], self.cfg.output.encoder)
         fps_values = [15, 24, 30, 60]
         self.recfps_combo.set_items([f"{v} fps" for v in fps_values], fps_values,
                                     self.cfg.output.record_fps)
@@ -603,7 +612,7 @@ class MainWindow(QMainWindow):
             listed = [(1280, 720), (640, 480)]
         cur = (self.cfg.capture.width, self.cfg.capture.height)
         if cur not in listed:
-            listed = sorted(set(listed + [cur]), key=lambda s: -s[0] * s[1])
+            listed = sorted({*listed, cur}, key=lambda s: -s[0] * s[1])
         self.res_combo.set_items([f"{w}×{h}" for w, h in listed], listed, cur)
 
         fps_values = [15, 24, 30, 60]
@@ -614,8 +623,8 @@ class MainWindow(QMainWindow):
 
     def _refresh_luts(self) -> None:
         luts = builtin_luts()
-        names = ["Không dùng"] + list(luts.keys())
-        data = [""] + [str(p) for p in luts.values()]
+        names = ["Không dùng", *luts]
+        data = ["", *[str(p) for p in luts.values()]]
         current = self.cfg.filters.lut_path
         if current and current not in data:
             names.append(Path(current).stem)
@@ -624,7 +633,7 @@ class MainWindow(QMainWindow):
 
     def _refresh_presets(self) -> None:
         names = cfgmod.list_presets()
-        self.preset_combo.set_items(["(tuỳ chỉnh)"] + names, [""] + names, "")
+        self.preset_combo.set_items(["(tuỳ chỉnh)", *names], ["", *names], "")
 
     # ================================================================
     # xử lý sự kiện
@@ -861,12 +870,10 @@ class MainWindow(QMainWindow):
         QShortcut(QKeySequence("Ctrl+B"), self, lambda: self.btn_vcam.toggle())
         QShortcut(QKeySequence("Ctrl+Q"), self, self.close)
 
-    def closeEvent(self, event: QCloseEvent) -> None:      # noqa: N802 (Qt API)
+    def closeEvent(self, event: QCloseEvent) -> None:
         self.pipeline.stop()
         if self._cam_controls is not None:
             self._cam_controls.close()
-        try:
+        with contextlib.suppress(OSError):
             self.cfg.save()
-        except OSError:
-            pass
         super().closeEvent(event)

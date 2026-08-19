@@ -276,7 +276,6 @@ class Pipeline(QThread):
     # ================= phân phối đầu ra =================
     def _dispatch(self, frame: Frame) -> None:
         cfg = self.cfg
-        h, w = frame.rgb.shape[:2]
 
         if cfg.output.vcam_enabled:
             try:
@@ -319,6 +318,7 @@ class Pipeline(QThread):
             resolution=f"{w}×{h}",
             vcam=self.vcam.device if self.vcam.is_open else "",
             recording=self.recorder.is_recording,
-            rec_seconds=(time.perf_counter() - self._rec_start) if self.recorder.is_recording else 0.0,
+            rec_seconds=((time.perf_counter() - self._rec_start)
+                         if self.recorder.is_recording else 0.0),
             device=self.info.summary(),
         )

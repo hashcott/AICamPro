@@ -15,12 +15,12 @@ class CubeLUT:
         self.domain = domain
         self.name = name
 
-    def to(self, device, dtype=torch.float32) -> "CubeLUT":
+    def to(self, device, dtype=torch.float32) -> CubeLUT:
         self.table = self.table.to(device=device, dtype=dtype)
         return self
 
     @classmethod
-    def load(cls, path: str | Path) -> "CubeLUT":
+    def load(cls, path: str | Path) -> CubeLUT:
         path = Path(path)
         size = 0
         dmin, dmax = 0.0, 1.0
@@ -45,7 +45,9 @@ class CubeLUT:
                 except (ValueError, IndexError):
                     continue
         if size == 0 or len(values) != size ** 3:
-            raise ValueError(f"{path.name}: không phải LUT 3D hợp lệ (size={size}, dòng={len(values)})")
+            raise ValueError(
+                f"{path.name}: không phải LUT 3D hợp lệ "
+                f"(size={size}, dòng={len(values)})")
 
         # .cube: R biến thiên nhanh nhất -> reshape (B, G, R, 3)
         t = torch.tensor(values, dtype=torch.float32).view(size, size, size, 3)

@@ -1,7 +1,6 @@
 """Ghép chủ thể lên nền mới: làm mờ, thay ảnh, màu đặc, phông xanh, nền trong suốt."""
 from __future__ import annotations
 
-
 import numpy as np
 import torch
 

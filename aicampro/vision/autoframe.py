@@ -137,7 +137,7 @@ class AutoFramer:
         """Kích thước khung cắt đúng tỉ lệ `aspect`, kẹp trong khung nguồn."""
         max_ch = min(h, w / aspect)
         ch = max(16.0, min(max_ch, want_h_px))
-        return int(round(ch * aspect)), int(round(ch))
+        return round(ch * aspect), round(ch)
 
     def _crop_and_resize(self, image: torch.Tensor, alpha: torch.Tensor | None,
                          x0: int, y0: int, cw: int, ch: int, oh: int, ow: int):
@@ -182,7 +182,7 @@ class AutoFramer:
             else:
                 k = min(0.99, max(0.0, cfg.smoothing))
                 self._state = tuple(
-                    s * k + t * (1 - k) for s, t in zip(self._state, target)
+                    s * k + t * (1 - k) for s, t in zip(self._state, target, strict=True)
                 )                                             # type: ignore[assignment]
 
         assert self._state is not None
@@ -196,6 +196,6 @@ class AutoFramer:
         want_h = max(want_h, full_h / max(1.0, cfg.max_zoom))
         cw, ch = self._crop_size(h, w, aspect, want_h)
 
-        x0 = int(round(cx * w - cw / 2))
-        y0 = int(round(cy * h - ch / 2))
+        x0 = round(cx * w - cw / 2)
+        y0 = round(cy * h - ch / 2)
         return self._crop_and_resize(image, alpha, x0, y0, cw, ch, oh, ow)
