@@ -8,6 +8,12 @@ Toàn bộ khâu xử lý ảnh chạy trên GPU bằng PyTorch — CPU chỉ lo
 
 *[English](README.md)*
 
+![Cửa sổ AICamPro](https://raw.githubusercontent.com/hashcott/AICamPro/main/docs/screenshot.png)
+
+*Bảng điều khiển và khung xem trước. Thanh trạng thái hiện fps vào/ra, thời gian
+GPU mỗi khung, độ phân giải và VRAM đang dùng. Ảnh này chụp lúc không có ai
+trước camera nên khung preview chỉ hiện ảnh nền thay thế.*
+
 ---
 
 ## Hiệu năng đo trên máy này
@@ -104,6 +110,11 @@ co/nở vùng người, tăng độ dứt khoát — hữu ích khi tóc bị ă
 LUT 3D `.cube` (kèm sẵn 6 preset trong `aicampro/assets/luts/`). Thả file `.cube` bất kỳ
 vào thư mục đó là dùng được.
 
+![Bộ LUT kèm theo](https://raw.githubusercontent.com/hashcott/AICamPro/main/docs/luts.png)
+
+*Từng LUT trên ảnh tham chiếu: dải màu, thang xám và một hàng tông da. Sinh bằng
+`scripts/make_assets.py` nên sửa được công thức.*
+
 **Làm đẹp** — làm mịn da giữ biên (chỉ áp lên vùng da nếu muốn), tăng nét, vignette.
 
 **Khung hình** — tự động bám chủ thể, cắt và phóng theo người trong ảnh. Bám theo
@@ -111,6 +122,10 @@ mặt nạ AI (chính xác nhất) hoặc theo khuôn mặt qua YuNet/Haar khi t
 Khung cắt luôn giữ đúng tỉ lệ đầu ra nên ảnh không bị méo. Muốn bám khung mà không
 mất nét thì đặt **Độ phân giải xuất** (mục Đầu ra) thấp hơn độ phân giải nguồn —
 ví dụ quay 1080p, xuất 720p: lúc đó khung cắt vẫn còn đủ điểm ảnh thật.
+
+![Ảnh nền kèm theo](https://raw.githubusercontent.com/hashcott/AICamPro/main/docs/backgrounds.png)
+
+*Bốn ảnh nền kèm theo dự án. Dùng ảnh nào cũng được.*
 
 **Camera (phần cứng)** — phơi sáng tự động/thủ công, thời gian phơi sáng, gain,
 độ sáng, cân bằng trắng, bù ngược sáng… đọc thẳng từ V4L2 nên chỉ hiện những thứ
