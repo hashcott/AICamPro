@@ -79,6 +79,60 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends lintian
           lintian --fail-on warning --tag-display-limit 0 dist/*.deb
 
+  rpm:
+    name: rpm package
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Cùng container với job phát hành, để lỗi spec lộ ra ở đây chứ không lộ ra
+    # lúc cắt tag. Không cài rpm qua apt: apt trên runner thỉnh thoảng treo.
+    container: fedora:41
+    steps:
+      - uses: actions/checkout@v4
+      - run: dnf -y --setopt=install_weak_deps=False install rpm-build python3
+      - run: ./packaging/build-rpm.sh
+      - name: gói phải chứa đúng những file đã khai
+        run: rpm -qplv dist/*.rpm
+
+  arch:
+    name: Arch package
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+      # --disable-sandbox: pacman 7 dựng sandbox bằng landlock + seccomp, thứ
+      # không dùng được trong container ("error restricting syscalls via seccomp").
+      # namcap là cổng kiểm tra của Arch; build-arch.sh tự gọi nếu thấy có.
+      - run: pacman -Sy --noconfirm --needed --disable-sandbox python namcap
+      - run: ./packaging/build-arch.sh
+
+  bundle:
+    name: AppImage and tarball
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Không chạy trên mọi lần push: job này tải khoảng 500 MB (Python độc lập +
+    # Qt) nên chỉ chạy trên nhánh chính và khi gọi tay. Nó tồn tại vì cả AppImage
+    # lẫn tar.gz dùng chung lib-payload.sh — sửa lib mà không có cổng nào chạy
+    # thì lỗi chỉ lộ ra lúc cắt tag.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./packaging/build-appimage.sh
+      - run: ./packaging/build-tarball.sh
+      - name: AppImage phải khởi động được
+        # --shell chạy đúng interpreter đi kèm mà không cần GPU hay màn hình.
+        # APPIMAGE_EXTRACT_AND_RUN: runner không có libfuse2 nên không mount được
+        # (và cài libfuse2 qua apt là cái đã từng treo job).
+        run: |
+          APPIMAGE_EXTRACT_AND_RUN=1 ./dist/AICamPro-*.AppImage --shell \
+            -c "import PySide6, cv2, numpy, pyvirtualcam; print('ok')"
+      - name: bản tar.gz phải giải nén và chạy được
+        run: |
+          tar -xzf dist/AICamPro-*.tar.gz -C "$RUNNER_TEMP"
+          "$RUNNER_TEMP"/AICamPro-*/AICamPro --shell -c "import PySide6; print('ok')"
+
   build:
     name: build sdist and wheel
     runs-on: ubuntu-latest

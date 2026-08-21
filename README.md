@@ -113,6 +113,21 @@ chmod +x AICamPro-*.AppImage
 ```
 
 Carries its own Python, Qt, OpenCV and numpy, so it runs on any distribution.
+There is an `aarch64` build too, but ROCm publishes no ARM64 wheels, so `--setup`
+installs the CPU build of PyTorch there and says so.
+
+### Portable tar.gz
+
+Same contents as the AppImage, without needing FUSE — useful on locked-down
+kernels and in containers, and it lets you read what you are running.
+
+```bash
+VERSION=0.1.1
+curl -LO https://github.com/hashcott/AICamPro/releases/download/v$VERSION/AICamPro-$VERSION-x86_64.tar.gz
+tar -xzf AICamPro-$VERSION-x86_64.tar.gz
+./AICamPro-$VERSION-x86_64/AICamPro --setup
+./AICamPro-$VERSION-x86_64/AICamPro
+```
 
 ### Debian, Ubuntu, Mint
 
@@ -126,6 +141,30 @@ aicampro
 
 Installs a desktop entry and icons, and `aicampro(1)` / `aicampro-setup(1)` man
 pages.
+
+### Fedora, RHEL, openSUSE
+
+```bash
+VERSION=0.1.1
+curl -LO https://github.com/hashcott/AICamPro/releases/download/v$VERSION/aicampro-$VERSION-1.fc41.noarch.rpm
+sudo dnf install ./aicampro-$VERSION-1.fc41.noarch.rpm
+aicampro-setup
+aicampro
+```
+
+The package is `noarch` and the `fc41` in the name only records where it was
+built; it installs on any distribution that uses rpm. On openSUSE use
+`sudo zypper install ./aicampro-*.rpm`.
+
+### Arch, Manjaro
+
+```bash
+VERSION=0.1.1
+curl -LO https://github.com/hashcott/AICamPro/releases/download/v$VERSION/aicampro-$VERSION-1-any.pkg.tar.zst
+sudo pacman -U ./aicampro-$VERSION-1-any.pkg.tar.zst
+aicampro-setup
+aicampro
+```
 
 ### From source
 
@@ -147,7 +186,7 @@ path:
 
 ```bash
 sudo ./scripts/setup_v4l2loopback.sh          # from a clone
-sudo /usr/lib/aicampro/scripts/setup_v4l2loopback.sh   # from the .deb
+sudo /usr/lib/aicampro/scripts/setup_v4l2loopback.sh   # from .deb, .rpm or Arch
 ```
 
 Model weights are not vendored — they carry their own licences, listed in

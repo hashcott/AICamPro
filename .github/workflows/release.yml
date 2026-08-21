@@ -65,11 +65,54 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: deb, path: dist/*.deb }
 
-  appimage:
-    name: AppImage
+  rpm:
+    name: rpm package
     needs: check
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Chạy trong container Fedora chứ không cài rpm qua apt trên runner: dnf
+    # trong ảnh Fedora đáng tin hơn (apt trên runner từng treo vô hạn), và spec
+    # được dựng bằng đúng rpmbuild mà người dùng Fedora sẽ cài gói bằng.
+    container: fedora:41
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ github.event.inputs.tag || github.ref }}" }
+      - run: dnf -y --setopt=install_weak_deps=False install rpm-build python3
+      - run: ./packaging/build-rpm.sh
+      - uses: actions/upload-artifact@v4
+        with: { name: rpm, path: dist/*.rpm }
+
+  arch:
+    name: Arch package
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # base-devel mang theo makepkg và fakeroot; `python` không nằm trong ảnh nên
+    # phải cài thêm — lib-systree.sh đọc version từ pyproject.toml bằng tomllib.
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ github.event.inputs.tag || github.ref }}" }
+      # --disable-sandbox: pacman 7 dựng sandbox bằng landlock + seccomp, thứ
+      # không dùng được trong container ("error restricting syscalls via seccomp").
+      - run: pacman -Sy --noconfirm --needed --disable-sandbox python
+      - run: ./packaging/build-arch.sh
+      - uses: actions/upload-artifact@v4
+        with: { name: arch, path: dist/*.pkg.tar.* }
+
+  bundle:
+    name: AppImage and tarball (${{ matrix.arch }})
+    needs: check
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Cả hai bản đều mang theo Python và Qt, dựng bằng chính interpreter
+          # đó, nên không cross-build được: mỗi kiến trúc cần runner của nó.
+          - { arch: x86_64, runner: ubuntu-latest }
+          - { arch: aarch64, runner: ubuntu-24.04-arm }
     steps:
       - uses: actions/checkout@v4
         with: { ref: "${{ github.event.inputs.tag || github.ref }}" }
@@ -77,13 +120,21 @@ jobs:
       # --appimage-extract-and-run, so nothing needs to mount. Installing it was
       # not just redundant, it hung the job -- apt on 24.04 wants to swap
       # libfuse2 against libfuse2t64 and waits for an answer that never comes.
+      #
+      # Hai script dùng chung cache (~/.cache/aicampro-build) nên Python độc lập
+      # chỉ tải một lần cho cả AppImage lẫn tar.gz.
       - run: ./packaging/build-appimage.sh
+      - run: ./packaging/build-tarball.sh
       - uses: actions/upload-artifact@v4
-        with: { name: appimage, path: dist/*.AppImage }
+        with:
+          name: bundle-${{ matrix.arch }}
+          path: |
+            dist/*.AppImage
+            dist/*.tar.gz
 
   publish:
     name: publish
-    needs: [python, deb, appimage]
+    needs: [python, deb, rpm, arch, bundle]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -112,13 +163,24 @@ jobs:
 
           | File | For |
           | --- | --- |
-          | `*.AppImage` | Any distribution. `chmod +x` and run. |
-          | `*.deb` | Debian, Ubuntu, Mint. `sudo apt install ./aicampro_*.deb` |
-          | `*.whl` / `*.tar.gz` | Installing into your own Python environment. |
+          | `AICamPro-*-x86_64.AppImage` | Any distribution. `chmod +x` and run. |
+          | `AICamPro-*-x86_64.tar.gz` | Same contents, no FUSE: extract, run `./AICamPro`. |
+          | `aicampro_*_all.deb` | Debian, Ubuntu, Mint. `sudo apt install ./aicampro_*.deb` |
+          | `aicampro-*.noarch.rpm` | Fedora, RHEL, openSUSE. `sudo dnf install ./aicampro-*.rpm` |
+          | `aicampro-*-any.pkg.tar.zst` | Arch, Manjaro. `sudo pacman -U ./aicampro-*.pkg.tar.zst` |
+          | `aicampro-*.whl`, `aicampro-<version>.tar.gz` | Installing into your own Python environment. |
+          | `*-aarch64.AppImage`, `*-aarch64.tar.gz` | ARM64 machines. CPU only — see below. |
+
+          Both `.tar.gz` shapes exist: `AICamPro-<version>-<arch>.tar.gz` is the
+          portable build, `aicampro-<version>.tar.gz` is the Python sdist.
 
           None of them bundle PyTorch. The ROCm build is around 14 GB installed
           and has to match your amdgpu driver, so it is fetched once by
           `aicampro-setup` (or `./AICamPro-*.AppImage --setup`).
+
+          ROCm publishes no ARM64 wheels, so on `aarch64` the setup step installs
+          the CPU build of PyTorch instead and says so. Everything works, nothing
+          is accelerated.
           NOTE
           cat release-notes.md
 

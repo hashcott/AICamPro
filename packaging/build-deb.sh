@@ -3,54 +3,24 @@
 #
 # Gói là Architecture: all — toàn bộ mã là Python thuần, phần nhị phân nặng
 # (PyTorch ROCm, Qt, OpenCV) do aicampro-setup tải về môi trường người dùng.
+#
+# Nội dung cây /usr nằm trong lib-systree.sh, dùng chung với .rpm và Arch;
+# file này chỉ lo phần siêu dữ liệu riêng của Debian.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=packaging/lib-systree.sh
+source "$ROOT/packaging/lib-systree.sh"
+
 OUT="${OUT_DIR:-$ROOT/dist}"
-VERSION="$(python3 -c "import tomllib,sys; print(tomllib.load(open('$ROOT/pyproject.toml','rb'))['project']['version'])")"
+VERSION="$(systree_version)"
 PKG="aicampro"
 BUILD="$(mktemp -d)"
 trap 'rm -rf "$BUILD"' EXIT
 
 DEST="$BUILD/$PKG"
-install -d "$DEST/DEBIAN" \
-           "$DEST/usr/bin" \
-           "$DEST/usr/lib/$PKG" \
-           "$DEST/usr/lib/$PKG/scripts" \
-           "$DEST/usr/share/applications" \
-           "$DEST/usr/share/icons/hicolor/scalable/apps" \
-           "$DEST/usr/share/doc/$PKG" \
-           "$DEST/usr/share/man/man1"
-
-echo "→ chép ứng dụng"
-cp -r "$ROOT/aicampro" "$DEST/usr/lib/$PKG/"
-find "$DEST/usr/lib/$PKG" -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
-# cp giữ nguyên quyền 664 của cây làm việc; Debian đòi 644 cho file thường
-# cp giữ nguyên quyền của cây làm việc (664/775); Debian đòi 644/755
-find "$DEST/usr/lib/$PKG" -type f -exec chmod 0644 {} +
-find "$DEST/usr/lib/$PKG" -type d -exec chmod 0755 {} +
-install -m 0755 "$ROOT/scripts/download_models.sh" "$DEST/usr/lib/$PKG/scripts/"
-install -m 0755 "$ROOT/scripts/setup_v4l2loopback.sh" "$DEST/usr/lib/$PKG/scripts/"
-
-echo "→ lệnh và tích hợp desktop"
-install -m 0755 "$ROOT/packaging/launcher.sh" "$DEST/usr/bin/aicampro"
-install -m 0755 "$ROOT/packaging/aicampro-setup" "$DEST/usr/bin/aicampro-setup"
-install -m 0644 "$ROOT/packaging/aicampro.desktop" "$DEST/usr/share/applications/"
-for page in aicampro aicampro-setup; do
-    gzip -9n -c "$ROOT/packaging/man/$page.1" > "$DEST/usr/share/man/man1/$page.1.gz"
-    chmod 0644 "$DEST/usr/share/man/man1/$page.1.gz"
-done
-install -m 0644 "$ROOT/packaging/icons/aicampro.svg" \
-        "$DEST/usr/share/icons/hicolor/scalable/apps/aicampro.svg"
-for size in 16 24 32 48 64 128 256 512; do
-    install -d "$DEST/usr/share/icons/hicolor/${size}x${size}/apps"
-    install -m 0644 "$ROOT/packaging/icons/aicampro-${size}.png" \
-            "$DEST/usr/share/icons/hicolor/${size}x${size}/apps/aicampro.png"
-done
-
-echo "→ tài liệu"
-install -m 0644 "$ROOT/README.md" "$DEST/usr/share/doc/$PKG/"
-install -m 0644 "$ROOT/README.vi.md" "$DEST/usr/share/doc/$PKG/"
+install -d "$DEST/DEBIAN"
+systree_build "$DEST"
 
 # Phiên bản không có revision nên dpkg coi đây là gói native: changelog.gz phải
 # đúng định dạng Debian, không thể đưa thẳng CHANGELOG.md vào.

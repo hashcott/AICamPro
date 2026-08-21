@@ -49,7 +49,22 @@ chmod +x AICamPro-*.AppImage
 ./AICamPro-*.AppImage
 ```
 
-Đã mang sẵn Python, Qt, OpenCV, numpy bên trong.
+Đã mang sẵn Python, Qt, OpenCV, numpy bên trong. Có cả bản `aarch64`, nhưng ROCm
+không phát hành wheel cho ARM64 nên ở đó `--setup` cài PyTorch bản CPU — và nói
+rõ ra như vậy.
+
+### tar.gz — chạy tại chỗ, không cần FUSE
+
+Cùng nội dung với AppImage nhưng không phải mount gì: dùng được trên kernel bị
+khoá user namespace, trong container, và xem được thẳng nội dung gói.
+
+```bash
+VERSION=0.1.1
+curl -LO https://github.com/hashcott/AICamPro/releases/download/v$VERSION/AICamPro-$VERSION-x86_64.tar.gz
+tar -xzf AICamPro-$VERSION-x86_64.tar.gz
+./AICamPro-$VERSION-x86_64/AICamPro --setup     # một lần: PyTorch ROCm + model
+./AICamPro-$VERSION-x86_64/AICamPro
+```
 
 ### Debian / Ubuntu / Mint
 
@@ -62,6 +77,29 @@ aicampro
 ```
 
 Có sẵn biểu tượng trong menu ứng dụng và trang man `aicampro(1)`.
+
+### Fedora / RHEL / openSUSE
+
+```bash
+VERSION=0.1.1
+curl -LO https://github.com/hashcott/AICamPro/releases/download/v$VERSION/aicampro-$VERSION-1.fc41.noarch.rpm
+sudo dnf install ./aicampro-$VERSION-1.fc41.noarch.rpm
+aicampro-setup                    # một lần: PyTorch ROCm + Qt + model
+aicampro
+```
+
+Gói là `noarch`, phần `fc41` trong tên chỉ ghi lại nơi build chứ không giới hạn
+bản phân phối. Trên openSUSE dùng `sudo zypper install ./aicampro-*.rpm`.
+
+### Arch / Manjaro
+
+```bash
+VERSION=0.1.1
+curl -LO https://github.com/hashcott/AICamPro/releases/download/v$VERSION/aicampro-$VERSION-1-any.pkg.tar.zst
+sudo pacman -U ./aicampro-$VERSION-1-any.pkg.tar.zst
+aicampro-setup
+aicampro
+```
 
 ### Từ mã nguồn
 
@@ -79,7 +117,7 @@ Cần bước này thì Meet/Zoom/Discord/OBS mới thấy AICamPro. Chạy mộ
 
 ```bash
 sudo ./scripts/setup_v4l2loopback.sh                    # bản clone
-sudo /usr/lib/aicampro/scripts/setup_v4l2loopback.sh    # bản .deb
+sudo /usr/lib/aicampro/scripts/setup_v4l2loopback.sh    # bản .deb/.rpm/Arch
 ```
 
 Kiểm tra nhanh trước khi chạy:

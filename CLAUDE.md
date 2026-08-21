@@ -119,20 +119,46 @@ LUT) đi qua `resolve_asset()` — thử theo CWD rồi tới gốc repo.
 
 ## Đóng gói
 
-Cả `.deb` lẫn AppImage đều **không** mang PyTorch. Bản ROCm nặng 14 GB sau khi
-cài — 13 GB trong đó là thư viện ROCm nhúng trong wheel (rccl 2,1 GB, magma
-952 MB…) — và phải khớp driver amdgpu, nên `aicampro-setup` tải nó một lần vào
+Không định dạng nào mang PyTorch. Bản ROCm nặng 14 GB sau khi cài — 13 GB trong
+đó là thư viện ROCm nhúng trong wheel (rccl 2,1 GB, magma 952 MB…) — và phải
+khớp driver amdgpu, nên `aicampro-setup` tải nó một lần vào
 `~/.local/share/aicampro/`.
 
-Hai chế độ, hai cơ chế khác nhau, và khác biệt này là bắt buộc:
+`packaging/` có năm script build, chia thành hai họ, mỗi họ dùng chung một lib:
 
-- **.deb** dùng venv tại `~/.local/share/aicampro/venv`, tạo bằng python3 hệ
-  thống. Đường dẫn interpreter ổn định nên venv sống lâu dài.
-- **AppImage** dùng `pip install --target ~/.local/share/aicampro/runtime`,
-  **không** venv. Python của AppImage nằm ở `/tmp/.mount_XXXX`, đổi mỗi lần
-  chạy và biến mất khi thoát — venv tạo từ nó có symlink `bin/python3` và
-  `pyvenv.cfg` trỏ vào hư vô ngay khi ứng dụng đóng. Một thư mục phẳng ghép vào
-  `PYTHONPATH` không có interpreter nào để hỏng.
+| Script | Ra | Dùng chung |
+|---|---|---|
+| `build-deb.sh` | `aicampro_<v>_all.deb` | `lib-systree.sh` |
+| `build-rpm.sh` | `aicampro-<v>-1.fcNN.noarch.rpm` | `lib-systree.sh` |
+| `build-arch.sh` | `aicampro-<v>-1-any.pkg.tar.zst` | `lib-systree.sh` |
+| `build-appimage.sh` | `AICamPro-<v>-<arch>.AppImage` | `lib-payload.sh` |
+| `build-tarball.sh` | `AICamPro-<v>-<arch>.tar.gz` | `lib-payload.sh` |
+
+- **`lib-systree.sh`** dựng cây `/usr` cho ba gói của hệ thống. Ba định dạng chỉ
+  khác nhau ở siêu dữ liệu (control / spec / PKGBUILD); nội dung phải giống nhau
+  từng byte, nếu không thì sửa một đường dẫn ở `.deb` sẽ âm thầm bỏ sót `.rpm` và
+  Arch. PKGBUILD sinh ra bởi `build-arch.sh` cũng `source` đúng file này.
+- **`lib-payload.sh`** dựng cây mang theo Python + Qt cho AppImage và tar.gz.
+  Hai bản chỉ khác bước cuối (appimagetool so với tar) và dùng chung cả `AppRun`:
+  nó định vị mọi thứ tương đối theo `readlink -f "$0"` nên đúng cả trong điểm
+  mount tạm lẫn trong thư mục đã giải nén.
+
+Hai cơ chế nạp môi trường chạy, khác nhau, và khác biệt này là bắt buộc:
+
+- **Gói hệ thống** (`.deb`/`.rpm`/Arch) dùng venv tại
+  `~/.local/share/aicampro/venv`, tạo bằng python3 hệ thống. Đường dẫn
+  interpreter ổn định nên venv sống lâu dài.
+- **AppImage và tar.gz** dùng `pip install --target
+  ~/.local/share/aicampro/runtime`, **không** venv. Python của AppImage nằm ở
+  `/tmp/.mount_XXXX`, đổi mỗi lần chạy và biến mất khi thoát — venv tạo từ nó có
+  symlink `bin/python3` và `pyvenv.cfg` trỏ vào hư vô ngay khi ứng dụng đóng.
+  Một thư mục phẳng ghép vào `PYTHONPATH` không có interpreter nào để hỏng.
+
+Bản `aarch64` của AppImage và tar.gz dựng trên runner ARM (`ubuntu-24.04-arm`).
+**Không cross-build được**: cây được dựng bằng chính interpreter mà nó mang theo,
+nên `pip` phải chạy được trên kiến trúc đích — hai script tự dừng nếu `ARCH`
+khác `uname -m`. ROCm không có wheel cho ARM64 nên `aicampro-setup` chuyển sang
+PyTorch bản CPU và nói rõ ra.
 
 ## Cạm bẫy đã gặp
 
@@ -205,6 +231,20 @@ Những thứ này đã tốn thời gian debug một lần, đừng lặp lại
   "✓ sẵn sàng" trong khi chẳng tạo được thiết bị nào.
 - **Số hiệu `/dev/dri/renderD*` không cố định.** `recorder.py` dò card AMD theo
   `vendor == 0x1002` chứ không giả định `renderD128`.
+- **`makepkg` từ chối chạy dưới root**, đúng lúc CI thì chạy trong container với
+  root. `build-arch.sh` tạo một user dùng-một-lần rồi `runuser -u … env HOME=…`
+  — `runuser` nằm trong util-linux nên không phải cài `sudo` vào ảnh.
+- **pacman 7 dựng sandbox bằng landlock + seccomp, thứ không dùng được trong
+  container**: `error restricting syscalls via seccomp: 22`. Mọi lệnh `pacman`
+  trong workflow phải có `--disable-sandbox`.
+- **`%{_docdir}` của rpm không phải `/usr/share/doc` ở mọi nơi** — openSUSE đặt
+  là `/usr/share/doc/packages`. Spec viết thẳng `%{_datadir}/doc/%{name}` để
+  khớp cây mà `lib-systree.sh` đã dựng.
+- **rpmbuild nở macro trong cả comment của spec.** Comment chứa `%{...}` sinh
+  cảnh báo và có thể nở ra thứ không mong muốn; viết tên macro không có ngoặc.
+- **Runner GitHub không có libfuse2 nên không chạy trực tiếp AppImage được.**
+  Bước khói trong CI đặt `APPIMAGE_EXTRACT_AND_RUN=1` (cài libfuse2 qua apt là
+  cái đã từng treo job).
 
 ## Nhập cấu hình từ agent khác
 

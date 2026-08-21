@@ -6,6 +6,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- An RPM package (Fedora, RHEL, openSUSE) and an Arch package, both built and
+  attached to every tagged release alongside the existing `.deb`. All three are
+  architecture-independent and carry the same files: the `/usr` tree is built
+  once by `packaging/lib-systree.sh`, so a path can no longer be fixed in one
+  format and silently missed in the other two.
+- A portable `tar.gz` with the same contents as the AppImage, for machines where
+  an AppImage cannot be mounted. It shares its whole payload — bundled Python,
+  Qt, OpenCV — with the AppImage through `packaging/lib-payload.sh`.
+- `aarch64` builds of the AppImage and the tarball, from an ARM64 runner. They
+  cannot be cross-built, because both are assembled with the interpreter they
+  ship, so each architecture needs a runner of its own.
+
+### Changed
+
+- `aicampro-setup` installs the CPU build of PyTorch, with a warning, on
+  anything that is not x86_64. ROCm publishes no ARM64 wheels, so the previous
+  behaviour on the new `aarch64` builds would have been an unexplained pip
+  failure at the end of a long download.
+
 ### Fixed
 
 - The AppImage's `--shell` debug flag ran before `PYTHONPATH` was extended with

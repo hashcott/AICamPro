@@ -53,12 +53,26 @@ else
   "$PY" -m pip install --quiet --upgrade pip
 fi
 
+# PyTorch bản ROCm chỉ có wheel cho x86_64. Trên aarch64 (bản AppImage và
+# tar.gz cho ARM) index đó rỗng và pip chết với thông báo khó hiểu, nên chuyển
+# sang bản CPU — và nói thẳng ra là không có tăng tốc GPU, thay vì để người dùng
+# tự đoán khi thấy ứng dụng chạy 3 fps.
+MACHINE="$(uname -m)"
+TORCH_INDEX="https://download.pytorch.org/whl/$ROCM_CHANNEL"
+TORCH_LABEL="ROCm ($ROCM_CHANNEL) — khoảng 3 GB tải về, 14 GB sau khi cài"
+if [[ "$MACHINE" != "x86_64" ]]; then
+  TORCH_INDEX="https://download.pytorch.org/whl/cpu"
+  TORCH_LABEL="bản CPU"
+  echo "  ⚠ $MACHINE: ROCm không có wheel cho kiến trúc này."
+  echo "    Cài PyTorch CPU — ứng dụng vẫn chạy nhưng không có tăng tốc GPU."
+fi
+
 if "$PY" -c 'import torch' 2>/dev/null; then
   say "PyTorch đã có: $("$PY" -c 'import torch; print(torch.__version__)')"
 else
-  say "Cài PyTorch ROCm ($ROCM_CHANNEL) — khoảng 3 GB tải về, 14 GB sau khi cài"
+  say "Cài PyTorch $TORCH_LABEL"
   "$PY" -m pip install "${PIP_TARGET[@]}" torch torchvision \
-    --index-url "https://download.pytorch.org/whl/$ROCM_CHANNEL"
+    --index-url "$TORCH_INDEX"
 fi
 
 if [[ $MINIMAL -eq 0 ]]; then
